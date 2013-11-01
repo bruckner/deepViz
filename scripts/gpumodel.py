@@ -154,6 +154,8 @@ class IGPUModel:
                 self.test_outputs += [self.get_test_error()]
                 self.print_test_results()
                 self.print_test_status()
+
+            if self.get_num_batches_done() % self.checkpoint_freq == 0:
                 self.conditional_save()
             
             self.print_train_time(time() - compute_time_py)
@@ -264,6 +266,8 @@ class IGPUModel:
     
         pickle(checkpoint_file_full_path, dic,compress=self.zip_save)
         
+        if self.keep_checkpoints:
+            return
         for f in sorted(os.listdir(checkpoint_dir), key=alphanum_key):
             if sum(os.path.getsize(os.path.join(checkpoint_dir, f2)) for f2 in os.listdir(checkpoint_dir)) > self.max_filesize_mb*1024*1024 and f != checkpoint_file:
                 os.remove(os.path.join(checkpoint_dir, f))
@@ -294,6 +298,8 @@ class IGPUModel:
         op.add_option("zip-save", "zip_save", BooleanOptionParser, "Compress checkpoints?", default=0)
         op.add_option("test-one", "test_one", BooleanOptionParser, "Test on one batch at a time?", default=1)
         op.add_option("gpu", "gpu", ListOptionParser(IntegerOptionParser), "GPU override", default=OptionExpression("[-1] * num_gpus"))
+        op.add_option("check-freq", "checkpoint_freq", IntegerOptionParser, "Checkpoint frequency", default=OptionExpression("testing_freq"))
+        op.add_option("keep-checks", "keep_checkpoints", IntegerOptionParser, "Keep or remove old checkpoints", default=0)
         return op
 
     @staticmethod
