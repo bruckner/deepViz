@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Deep Viz</title>
+    <meta charset="utf-8">
+    <script src="static/js/d3.v3.min.js" charset="utf-8"></script>
+    <link href="static/style.css" media="all" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <h1>Deep Viz</h1>
+    <h1>Train Outputs</h1>
+    {{model.train_outputs}}
+    <h1>Layers</h1>
+    {% for layer in model.layers %}
+        <h2>{{layer.name}} ({{layer.type}})</h2>
+        {% set inputLayers = layer.get("inputLayers", []) %}
+        {% if inputLayers %}
+            <p><b>Input Layers: </b>
+            {% for layer in inputLayers %}
+                {{layer.name}}
+            {% endfor %}
+            </p>
+        {% endif %}
+        {% if layer.type == "conv" %}
+            <p><b>Connection weights:</b></p>
+            <table>
+            {% for row in layer.weights[0] %}
+                <tr>
+                {% for weight in row %}
+                    <td>{{weight}}</td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+    {% endfor %}
+    <script src="static/js/main.js" charset="utf-8"></script>
+</body>
+
+</html>
