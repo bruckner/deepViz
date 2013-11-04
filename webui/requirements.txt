@@ -1,1 +1,8 @@
 flask
+pydot
+networkx
+
+# Needed for cuda-convnet:
+python-magic
+matplotlib
+numpy

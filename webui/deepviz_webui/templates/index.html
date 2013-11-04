@@ -10,32 +10,14 @@
 
 <body>
     <h1>Deep Viz</h1>
+
+    <h1>Layers</h1>
+    <object type="image/svg+xml" data="/layers.svg" id="layer-dag">
+        Your browser does not support SVG
+    </object>
+
     <h1>Train Outputs</h1>
     {{model.train_outputs}}
-    <h1>Layers</h1>
-    {% for layer in model.layers %}
-        <h2>{{layer.name}} ({{layer.type}})</h2>
-        {% set inputLayers = layer.get("inputLayers", []) %}
-        {% if inputLayers %}
-            <p><b>Input Layers: </b>
-            {% for layer in inputLayers %}
-                {{layer.name}}
-            {% endfor %}
-            </p>
-        {% endif %}
-        {% if layer.type == "conv" %}
-            <p><b>Connection weights:</b></p>
-            <table>
-            {% for row in layer.weights[0] %}
-                <tr>
-                {% for weight in row %}
-                    <td>{{weight}}</td>
-                {% endfor %}
-                </tr>
-            {% endfor %}
-            </table>
-        {% endif %}
-    {% endfor %}
     <script src="static/js/main.js" charset="utf-8"></script>
 </body>
 
