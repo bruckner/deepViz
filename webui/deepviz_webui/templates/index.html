@@ -4,8 +4,8 @@
 <head>
     <title>Deep Viz</title>
     <meta charset="utf-8">
-    <script src="static/js/d3.v3.min.js" charset="utf-8"></script>
-    <link href="static/style.css" media="all" rel="stylesheet" type="text/css">
+    <script src="{{ url_for('static', filename='js/d3.v3.min.js') }}" charset="utf-8"></script>
+    <link href="{{ url_for('static', filename='style.css') }}" media="all" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -16,8 +16,15 @@
         Your browser does not support SVG
     </object>
 
-    <h1>Train Outputs</h1>
-    {{model.train_outputs}}
+    <h1>View Filters</h1>
+    <ul>
+        {% for layer in model.layers %}
+            {% if layer.type == "conv" %}
+                <li><a href="{{ url_for("view_all_filters", layer_name=layer.name) }}">{{layer.name}}</a></li>
+            {% endif %}
+        {% endfor %}
+    <ul>
+
     <script src="static/js/main.js" charset="utf-8"></script>
 </body>
 

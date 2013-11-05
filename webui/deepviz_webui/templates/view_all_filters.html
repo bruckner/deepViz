@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Viewing Filters for {{layer_name}}</title>
+    <meta charset="utf-8">
+    <link href="{{ url_for('static', filename='style.css') }}" media="all" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <h1>Filters for {{layer_name}}</h1>
+    {% for i in range(num_filters) %}
+    <img src="/layers/{{layer_name}}/filters/{{i}}.png?scale=5" class="filter-image">
+    {% endfor %}
+</body>
+
+</html>
