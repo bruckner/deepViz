@@ -80,7 +80,7 @@ class DataProvider:
             dic = unpickle(self.get_data_file_name(batch_num))
         return dic
     
-    def get_data_dims(self):
+    def get_data_dims(self, idx=0):
         return self.batch_meta['num_vis']
     
     def advance_batch(self):
@@ -203,6 +203,9 @@ class LabeledDataProvider(DataProvider):
     def get_num_classes(self):
         return len(self.batch_meta['label_names'])
     
+    def get_data_dims(self, idx):
+        return self.batch_meta['num_vis'] if idx == 0 else 1
+
 class LabeledMemoryDataProvider(LabeledDataProvider):
     def __init__(self, data_dir, batch_range, init_epoch=1, init_batchnum=None, dp_params={}, test=False):
         LabeledDataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test)
