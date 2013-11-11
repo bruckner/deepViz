@@ -53,7 +53,7 @@ def get_image_ready_filters(layer_name, input_idx=0):
     filters = layer['weights'][input_idx]
     if layer['type'] == 'fc': # Fully-connected layer
         num_filters = layer['outputs']
-        channels = 0  # TODO: should be set from layer data.
+        channels = 1  # TODO: should be set from layer data.
     if layer['type'] in ('conv', 'local'): # Conv layer
         num_filters = layer['filters']
         channels = layer['filterChannels'][input_idx]
