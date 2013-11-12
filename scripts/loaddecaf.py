@@ -2,10 +2,10 @@
 #PYTHONPATH. (export PYTHONPATH=.:/path/to/decaf-release)
 
 import argparse
-import pickle
 from matplotlib import pyplot
 from decaf.util import visualize
 from decaf.util import translator
+from gpumodel import IGPUModel
 
 
 def parse_args():
@@ -14,13 +14,12 @@ def parse_args():
     return parser.parse_args()
     
 def load_net(fname):
-    with open(fname) as f:
-        cudaconv_net = pickle.load(f)
-        layers = cudaconv_net["model_state"]["layers"]
-        
-        #Note, data dimensions are hardcoded here - not sure we have that info in the cudaconv object?
-        decafnet = translator.translate_cuda_network(layers, {'data': (32, 32, 3)})
-        return decafnet
+    cudaconv_net = IGPUModel.load_checkpoint(fname)
+    layers = cudaconv_net["model_state"]["layers"]
+    
+    #Note, data dimensions are hardcoded here - not sure we have that info in the cudaconv object?
+    decafnet = translator.translate_cuda_network(layers, {'data': (32, 32, 3)})
+    return decafnet
         
 def visualize_layer(l):
     filters = l.param()[0].data()
