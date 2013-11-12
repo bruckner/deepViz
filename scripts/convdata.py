@@ -29,7 +29,11 @@ import random as r
 
 class CIFARDataProvider(LabeledMemoryDataProvider):
     def __init__(self, data_dir, batch_range, init_epoch=1, init_batchnum=None, dp_params={}, test=False):
-        LabeledMemoryDataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test)
+        LabeledDataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test)
+        self.data_dic = []
+        for i in batch_range:
+            self.data_dic += [unpickle(self.get_data_file_name(i))]
+            self.data_dic[-1]["labels"] = n.c_[n.require(self.data_dic[-1]['labels'], dtype=n.single)]
         self.data_mean = self.batch_meta['data_mean']
         self.num_colors = 3
         self.img_size = 32
