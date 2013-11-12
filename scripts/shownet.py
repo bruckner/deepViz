@@ -239,6 +239,12 @@ class ShowConvNet(ConvNet):
         next_data = self.get_next_batch(train=False)
         b1 = next_data[1]
         num_ftrs = self.layers[self.ftr_layer_idx]['outputs']
+        read_batch_size = self.test_data_provider.batch_meta['num_cases_per_batch']
+        if (self.write_batch_size == 0):
+            self.write_batch_size = self.test_data_provider.batch_meta['num_cases_per_batch']
+        if (read_batch_size % self.write_batch_size != 0):
+            raise ValueError('Write batch size must divide input batch size')
+        sub_batches = read_batch_size / self.write_batch_size
         while True:
             batch = next_data[1]
             data = next_data[2]
@@ -248,14 +254,26 @@ class ShowConvNet(ConvNet):
             # load the next batch while the current one is computing
             next_data = self.get_next_batch(train=False)
             self.finish_batch()
-            path_out = os.path.join(self.feature_path, 'data_batch_%d' % batch)
-            pickle(path_out, {'data': ftrs, 'labels': data[1]})
-            print "Wrote feature file %s" % path_out
+
+            for sub_batch in xrange(0, sub_batches):
+                start = sub_batch * self.write_batch_size
+                end = start + self.write_batch_size
+                self.write_sub_batch(ftrs[start:end], data[1], (batch - 1) * sub_batches + sub_batch)
+ 
             if next_data[1] == b1:
                 break
-        pickle(os.path.join(self.feature_path, 'batches.meta'), {'source_model':self.load_file,
-                                                                 'num_vis':num_ftrs})
-                
+        pickle(os.path.join(self.feature_path, 'batches.meta'), {'source_model': self.load_file,
+                                                                 'num_vis': num_ftrs,
+                                                                 'label_names': self.test_data_provider.batch_meta['label_names'],
+                                                                 'num_cases_per_batch': self.write_batch_size})
+
+    def write_sub_batch(self, ftrs, labels, sub_batch):
+        if (self.transpose_features):
+            ftrs = numpy.ascontiguousarray(ftrs.T)
+        path_out = os.path.join(self.feature_path, 'data_batch_%d' % (sub_batch + 1))
+        pickle(path_out, {'data': ftrs, 'labels': labels})
+        print "Wrote feature file %s" % path_out
+
     def start(self):
         self.op.print_values()
         if self.show_cost:
@@ -286,7 +304,8 @@ class ShowConvNet(ConvNet):
         op.add_option("only-errors", "only_errors", BooleanOptionParser, "Show only mistaken predictions (to be used with --show-preds)", default=False, requires=['show_preds'])
         op.add_option("write-features", "write_features", StringOptionParser, "Write test data features from given layer", default="", requires=['feature-path'])
         op.add_option("feature-path", "feature_path", StringOptionParser, "Write test data features to this path (to be used with --write-features)", default="")
-        
+        op.add_option("transpose-features", "transpose_features", IntegerOptionParser, "Whether to write features in column major format", default=0)
+        op.add_option("write-batch-size", "write_batch_size", IntegerOptionParser, "Size of feature batches to write", default=0)
         op.options['load_file'].default = None
         return op
     

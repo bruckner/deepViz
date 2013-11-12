@@ -104,9 +104,12 @@ class ConvNet(IGPUModel):
             
     # Make sure the data provider returned data in proper format
     def parse_batch_data(self, batch_data, train=True):
-        if max(d.dtype != n.single for d in batch_data[2]):
+        epoch, batch_num, datadic = batch_data
+        if type(datadic) != list:
+            datadic = [datadic['data'], datadic['labels']]
+        if max(d.dtype != n.single for d in datadic):
             raise DataProviderException("All matrices returned by data provider must consist of single-precision floats.")
-        return batch_data
+        return epoch, batch_num, datadic
 
     def start_batch(self, batch_data, train=True):
         data = batch_data[2]
@@ -192,6 +195,7 @@ class ConvNet(IGPUModel):
         DataProvider.register_data_provider('cifar', 'CIFAR', CIFARDataProvider)
         DataProvider.register_data_provider('dummy-cn-n', 'Dummy ConvNet', DummyConvNetDataProvider)
         DataProvider.register_data_provider('cifar-cropped', 'Cropped CIFAR', CroppedCIFARDataProvider)
+        DataProvider.register_data_provider('feature', 'Convolved features', LabeledDataProvider)
         
         return op
     

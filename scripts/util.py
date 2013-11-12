@@ -31,6 +31,8 @@ from math import sqrt
 import gzip
 import zipfile
 
+import sys
+
 class UnpickleError(Exception):
     pass
 
@@ -43,6 +45,7 @@ try:
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
 except ImportError: # no magic module
+    print "Failed to import filemagic"
     ms = None
 
 def get_gpu_lock(id=-1):
@@ -70,9 +73,11 @@ def unpickle(filename):
     if not os.path.exists(filename):
         raise UnpickleError("Path '%s' does not exist." % filename)
     if ms is not None and ms.file(filename).startswith('gzip'):
+        print "Opening with gzip"
         fo = gzip.open(filename, 'rb')
         dict = cPickle.load(fo)
     elif ms is not None and ms.file(filename).startswith('Zip'):
+        print "Opening with zip"
         fo = zipfile.ZipFile(filename, 'r', zipfile.ZIP_DEFLATED)
         dict = cPickle.loads(fo.read('data'))
     else:

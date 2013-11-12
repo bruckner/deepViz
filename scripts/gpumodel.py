@@ -41,7 +41,7 @@ class ModelStateException(Exception):
     pass
 
 # GPU Model interface
-class IGPUModel:
+class IGPUModel(object):
     def __init__(self, model_name, op, load_dic, filename_options=None, dp_params={}):
         # these are input parameters
         self.model_name = model_name
