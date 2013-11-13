@@ -29,7 +29,7 @@ from util import *
 
 BATCH_META_FILE = "batches.meta"
 
-class DataProvider:
+class DataProvider(object):
     BATCH_REGEX = re.compile('^data_batch_(\d+)(\.\d+)?$')
     def __init__(self, data_dir, batch_range=None, init_epoch=1, init_batchnum=None, dp_params={}, test=False):
         if batch_range == None:
@@ -55,27 +55,31 @@ class DataProvider:
 
         return epoch, batchnum, self.data_dic
     
-    def __add_subbatch(self, batch_num, sub_batchnum, batch_dic):
+    def _add_subbatch(self, batch_num, sub_batchnum, batch_dic):
         subbatch_path = "%s.%d" % (os.path.join(self.data_dir, self.get_data_file_name(batch_num)), sub_batchnum)
         if os.path.exists(subbatch_path):
+            print "found sub_batch %d.%d" % (batch_num, sub_batchnum)
             sub_dic = unpickle(subbatch_path)
             self._join_batches(batch_dic, sub_dic)
         else:
             raise IndexError("Sub-batch %d.%d does not exist in %s" % (batch_num,sub_batchnum, self.data_dir))
         
-    def _join_batches(self, main_batch, sub_batch):
-        main_batch['data'] = n.r_[main_batch['data'], sub_batch['data']]
-        
+    def _join_batches(self, main_batch, sub_batch, key='data'):
+        #print "joining batch", key, main_batch[key].shape, sub_batch[key].shape
+        main_batch[key] = n.c_[main_batch[key], sub_batch[key]]
+
     def get_batch(self, batch_num):
         if os.path.exists(self.get_data_file_name(batch_num) + '.1'): # batch in sub-batches
             dic = unpickle(self.get_data_file_name(batch_num) + '.1')
             sb_idx = 2
             while True:
                 try:
-                    self.__add_subbatch(batch_num, sb_idx, dic)
+                    self._add_subbatch(batch_num, sb_idx, dic)
                     sb_idx += 1
                 except IndexError:
                     break
+            for k in dic:
+                dic[k] = n.ascontiguousarray(dic[k])
         else:
             dic = unpickle(self.get_data_file_name(batch_num))
         return dic
@@ -199,7 +203,17 @@ class MemoryDataProvider(DataProvider):
 class LabeledDataProvider(DataProvider):   
     def __init__(self, data_dir, batch_range=None, init_epoch=1, init_batchnum=None, dp_params={}, test=False):
         DataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test)
-        
+
+    def _add_subbatch(self, batch_num, sub_batchnum, batch_dic):
+        subbatch_path = "%s.%d" % (os.path.join(self.data_dir, self.get_data_file_name(batch_num)), sub_batchnum)
+        if os.path.exists(subbatch_path):
+            print "found sub_batch %d.%d" % (batch_num, sub_batchnum)
+            sub_dic = unpickle(subbatch_path)
+            self._join_batches(batch_dic, sub_dic, 'data')
+            self._join_batches(batch_dic, sub_dic, 'labels')
+        else:
+            raise IndexError("Sub-batch %d.%d does not exist in %s" % (batch_num,sub_batchnum, self.data_dir))
+
     def get_num_classes(self):
         return len(self.batch_meta['label_names'])
     
@@ -212,8 +226,6 @@ class LabeledMemoryDataProvider(LabeledDataProvider):
         self.data_dic = []
         for i in batch_range:
             self.data_dic += [self.get_batch(i)]
-            #self.data_dic += [unpickle(self.get_data_file_name(i))]
-            #self.data_dic[-1]["labels"] = n.c_[n.require(self.data_dic[-1]['labels'], dtype=n.single)]
             
     def get_next_batch(self):
         epoch, batchnum = self.curr_epoch, self.curr_batchnum
