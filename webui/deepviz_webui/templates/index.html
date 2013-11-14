@@ -6,20 +6,29 @@
 
 <h1>Deep Viz</h1>
 
-<h1>Layers</h1>
-<object type="image/svg+xml" data="/layers.svg" id="layer-dag">
-    Your browser does not support SVG
-</object>
+<div id="layer-graph">
+    <h1>Layers</h1>
+    <object type="image/svg+xml" data="/layers.svg" id="layer-dag">
+        Your browser does not support SVG
+    </object>
+</div>
 
-<h1>View Filters</h1>
-<ul>
-    {% for layer in model.layers %}
-        {% if layer.type == "conv" %}
-            <li><a href="{{ url_for("view_all_filters", layer_name=layer.name) }}">{{layer.name}}</a></li>
-        {% endif %}
-    {% endfor %}
-</ul>
+<div id="detailed-view">
+    Zoomed view of selected filters goes here.
+</div>
+
+
+<div id="timeline">
+    <input type="range"
+           min="1"
+           max="{{ model.num_epochs }}"
+           step="1"
+           value="1"
+           id="timeline-slider">
+    <span><span id="timeline-position">1</span>/{{ model.num_epochs }}</span>
+</div>
 {% endblock %}
+
 
 {% block footer %}
 <script src="static/js/main.js" charset="utf-8"></script>

@@ -1,3 +1,13 @@
 body {
     font: 12px "Helvetica" sans-serif;
 }
+
+#timeline {
+    text-align: center;
+    width: 100%;
+    background: #ebebeb;
+}
+
+#timeline-slider {
+    width: 80%;
+}
