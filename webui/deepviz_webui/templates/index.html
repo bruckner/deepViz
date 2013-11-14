@@ -1,31 +1,26 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-    <title>Deep Viz</title>
-    <meta charset="utf-8">
-    <script src="{{ url_for('static', filename='js/d3.v3.min.js') }}" charset="utf-8"></script>
-    <link href="{{ url_for('static', filename='style.css') }}" media="all" rel="stylesheet" type="text/css">
-</head>
+{% block title %}DeepViz{% endblock %}
 
-<body>
-    <h1>Deep Viz</h1>
+{% block content %}
 
-    <h1>Layers</h1>
-    <object type="image/svg+xml" data="/layers.svg" id="layer-dag">
-        Your browser does not support SVG
-    </object>
+<h1>Deep Viz</h1>
 
-    <h1>View Filters</h1>
-    <ul>
-        {% for layer in model.layers %}
-            {% if layer.type == "conv" %}
-                <li><a href="{{ url_for("view_all_filters", layer_name=layer.name) }}">{{layer.name}}</a></li>
-            {% endif %}
-        {% endfor %}
-    <ul>
+<h1>Layers</h1>
+<object type="image/svg+xml" data="/layers.svg" id="layer-dag">
+    Your browser does not support SVG
+</object>
 
-    <script src="static/js/main.js" charset="utf-8"></script>
-</body>
+<h1>View Filters</h1>
+<ul>
+    {% for layer in model.layers %}
+        {% if layer.type == "conv" %}
+            <li><a href="{{ url_for("view_all_filters", layer_name=layer.name) }}">{{layer.name}}</a></li>
+        {% endif %}
+    {% endfor %}
+</ul>
+{% endblock %}
 
-</html>
+{% block footer %}
+<script src="static/js/main.js" charset="utf-8"></script>
+{% endblock %}

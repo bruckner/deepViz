@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}{% endblock %} - Deep Viz</title>
+    <meta charset="utf-8">
+    <script src="{{ url_for('static', filename='js/d3.v3.min.js') }}" charset="utf-8"></script>
+    <link href="{{ url_for('static', filename='style.css') }}" media="all" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">{% block footer %}{% endblock %}</div>
+</body>
+
+</html>
