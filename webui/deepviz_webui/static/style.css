@@ -1,13 +1,44 @@
-body {
-    font: 12px "Helvetica" sans-serif;
+#footer {
+    padding-top: 15px;
+    border-top-color: #464646;
 }
 
 #timeline {
     text-align: center;
-    width: 100%;
-    background: #ebebeb;
+    vertical-align: middle;
 }
 
 #timeline-slider {
-    width: 80%;
+    width: 50%;
+}
+
+#header {
+    background: #30585d;
+    color: #fff;
+    padding-left: 10px;
+}
+
+body {
+    height: 100%;
+    overflow: hidden;
+    padding-top: 70px;
+}
+
+#main-contentarea-outer {
+    position: fixed;
+    left: 240px;
+}
+
+#sidebar-outer {
+    position: fixed;
+    width: 240px;
+}
+
+#sidebar-inner {
+    padding: 5px;
+    font-size: 12px;
+}
+
+#main-contentarea-inner, #sidebar-inner {
+    overflow: auto;
 }

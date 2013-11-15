@@ -4,32 +4,59 @@
 
 {% block content %}
 
-<h1>Deep Viz</h1>
 
-<div id="layer-graph">
-    <h1>Layers</h1>
-    <object type="image/svg+xml" data="/layers.svg" id="layer-dag">
-        Your browser does not support SVG
-    </object>
-</div>
-
-<div id="detailed-view">
-    Zoomed view of selected filters goes here.
-</div>
+    <div class="navbar navbar-default navbar-fixed-top" id="header">
+        <h1>Deep Viz</h1>
+    </div>
 
 
-<div id="timeline">
-    <input type="range"
-           min="1"
-           max="{{ model.num_epochs }}"
-           step="1"
-           value="1"
-           id="timeline-slider">
-    <span><span id="timeline-position">1</span>/{{ model.num_epochs }}</span>
-</div>
-{% endblock %}
+    <div id="sidebar-outer">
+        <div id="sidebar-inner">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Model <tt>__dict__</tt> fields</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        {% for key in model.__dict__.keys()|sort %}
+                            <li>{{ key }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div id="main-contentarea-outer">
+        <div class="container" style="clear:left;" id="main-contentarea-inner">
+            <div class="row">
+                <div class="col-md-12" role="main" id="detailed-view">
+                    <div id="layer-graph">
+                        <object type="image/svg+xml" data="/layers.svg" id="layer-dag">
+                            Your browser does not support SVG
+                        </object>
+                    </div>
+                    <p class="alert alert-warning">Zoomed view of selected filters goes here.</p>
 
-{% block footer %}
-<script src="static/js/main.js" charset="utf-8"></script>
+                    <p class="alert alert-info">Both this pane and the sidebar are scrollable.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navbar navbar-default navbar-fixed-bottom" id="footer" role="navigation">
+        <div id="timeline">
+            <a href="#" type="button" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-play"></span>
+            </a>
+            <input type="range"
+                   min="1"
+                   max="{{ model.num_epochs }}"
+                   step="1"
+                   value="1"
+                   id="timeline-slider">
+            <span class="badge"><span id="timeline-position">1</span>/{{ model.num_epochs }}</span>
+        </div>
+    </div>
+    <script src="static/js/main.js" charset="utf-8"></script>
 {% endblock %}
