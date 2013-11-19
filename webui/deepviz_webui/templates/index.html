@@ -38,9 +38,9 @@
                             Your browser does not support SVG
                         </object>
                     </div>
-                    <p class="alert alert-warning">Zoomed view of selected filters goes here.</p>
-
-                    <p class="alert alert-info">Both this pane and the sidebar are scrollable.</p>
+                    <div id="filter-display">
+                        <object type="image/svg+xml" width="100%" height="800px"></object>
+                    </div>
                 </div>
             </div>
         </div>
@@ -55,11 +55,11 @@
             </a>
             <input type="range"
                    min="1"
-                   max="{{ model.num_epochs }}"
+                   max="{{ num_timesteps }}"
                    step="1"
                    value="1"
                    id="timeline-slider">
-            <span class="badge"><span id="timeline-position">1</span>/{{ model.num_epochs }}</span>
+            <span class="badge"><span id="timeline-position">1</span>/{{ num_timesteps }}</span>
         </div>
     </div>
     <script src="static/js/main.js" charset="utf-8"></script>

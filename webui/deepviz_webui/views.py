@@ -8,12 +8,26 @@ import networkx as nx
 import numpy as np
 from PIL import Image
 from shownet import ShowConvNet
-import xml.etree.ElementTree as ElementTree
+import os
+
+import loaddecaf
+
+_models = None
+_model = None  # TODO: remove this once the graph is drawn from Decaf
 
 
-_model = None
+def get_models():
+    global _models
+    if _models is None:
+        model_path = app.config["TRAINED_MODEL_PATH"]
+        checkpoints = sorted(os.listdir(model_path))
+        _models = [loaddecaf.load_net(os.path.join(model_path, c)) for c in checkpoints]
+
+    return _models
 
 
+
+# TODO: remove this once the graph is drawn from Decaf:
 def get_model():
     global _model
     if _model is None:
@@ -25,6 +39,12 @@ def get_model():
         op = old_op
         _model = ShowConvNet(op, load_dic)
     return _model
+
+@app.route("/checkpoints/<int:checkpoint>/layers/<layer>/overview.svg")
+def layer_overview(checkpoint, layer):
+    from selectmodel import select_region, get_svg
+    svg = select_region(get_models(), times=checkpoint)[layer]
+    return Response(svg, mimetype="image/svg+xml")
 
 
 @app.route("/layers.svg")
@@ -108,6 +128,7 @@ def view_all_filters(layer_name):
 @app.route("/")
 def index():
     context = {
-        'model' : get_model(),
+        'num_timesteps' : len(get_models()),
+        'model' : get_models()[0],
     }
     return render_template('index.html', **context)

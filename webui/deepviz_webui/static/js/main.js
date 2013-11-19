@@ -1,5 +1,6 @@
 var slider = $("#timeline-slider");
 var playButton = $("#timeline-button");
+var filterDisplay = $("#filter-display");
 var playButtonIcon = playButton.find("span");
 var millisPerFrame = 1000;
 
@@ -23,6 +24,7 @@ function set_play_button_icon(iconName) {
 }
 
 function update_timeline_position(newPosition) {
+    // Handle the playback button's state transitions:
     $("#timeline-position").text(newPosition);
     slider.val(newPosition);
     if (!timer.isActive) {
@@ -34,7 +36,13 @@ function update_timeline_position(newPosition) {
     } else {
         set_play_button_icon("pause")
     }
+    // Redraw the filter display:
+    filterDisplay.find("object").attr("data", "/checkpoints/" + (newPosition - 1) +"/layers/conv1/overview.svg");
 }
+
+$(document).on("ready", function() {
+    update_timeline_position(1);
+});
 
 function advance_timeline() {
     if (!timeline_at_end()) {
