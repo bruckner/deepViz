@@ -15,6 +15,9 @@ Queries are supported with a filtering syntax. The default filter for all layers
 
 #Converts results of decaf viz to an svg.
 def get_svg(dat):
+    if dat is None:
+        return None
+        
     imgdata = StringIO.StringIO()
     print dat
     pyplot.imsave(imgdata, dat, cmap = cm.gray, format='svg')
@@ -28,7 +31,7 @@ def get_svg(dat):
 def select_region(model, times=None, layers=None, filters=None):
     if times is not None:
         result = dict([(l,loaddecaf.visualize_complex_layer(model[times].layers[l])) for l in model[times].layers.keys()])
-        print get_svg(result['conv2'])
+        result = dict([(k,get_svg(v)) for k,v in result.items()])
     else:
         result = [[loaddecaf.visualize_complex_layer(m.layers[l]) for l in m.layers.keys()] for m in model]
     return result
@@ -37,6 +40,7 @@ def main(args):
     inp = args
     models = [loaddecaf.load_net("%s/%s" % (args[1], f)) for f in os.listdir(args[1])]
     x = select_region(models, 7)
+    print result
     
 if __name__ == "__main__":
     main(sys.argv)
