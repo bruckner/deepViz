@@ -24,16 +24,6 @@ body {
     padding-top: 70px;
 }
 
-#main-contentarea-outer {
-    position: fixed;
-    left: 240px;
-}
-
-#sidebar-outer {
-    position: fixed;
-    width: 240px;
-}
-
 #sidebar-inner {
     padding: 5px;
     font-size: 12px;
@@ -42,3 +32,10 @@ body {
 #main-contentarea-inner, #sidebar-inner {
     overflow: auto;
 }
+
+#layer-dag {
+    width: 100%;
+    height: 150px;
+    padding: 10px 20px 10px 10px;
+}
+
