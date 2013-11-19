@@ -22,10 +22,32 @@ def load_net(fname):
     return decafnet
         
 def visualize_layer(l):
-    filters = l.param()[0].data()
+    print l.param()
+    if len(l.param()) < 1:
+        return None
+    filters = l.param()[0]#.data()
     _ = visualize.show_multiple(filters.T)
-    pyplot.title('First layer Filters')
-    pyplot.show()
+    return _
+    
+    
+#Returns the decaf viz for an arbitrary layer.
+#Infers shape and size from the layer info.
+#Produces results as small multiples of kernels (with position encoding filters and channels).
+def visualize_complex_layer(l):
+    #Should probably just be checking if layer is a convolution.
+    if len(l.param()) < 1 or 'num_kernels' not in l.spec:
+        return None
+    
+    nfilters = l.spec['num_kernels']
+    ksize = l.spec['ksize']
+    channels = l.param()[0].data().shape[0]/(ksize*ksize)
+    
+    # make the right filter shape
+    filters = l.param()[0].data()
+    filters = filters.T.reshape(nfilters, ksize, ksize, channels)
+    filters = filters.swapaxes(2,3).swapaxes(1,2).reshape(nfilters*channels, ksize, ksize)
+    _ = visualize.show_multiple(filters, ncols=channels)
+    return _
 
 def main():
     args = parse_args()
