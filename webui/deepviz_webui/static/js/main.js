@@ -37,7 +37,7 @@ function update_timeline_position(newPosition) {
         set_play_button_icon("pause")
     }
     // Redraw the filter display:
-    filterDisplay.find("object").attr("data", "/checkpoints/" + (newPosition - 1) +"/layers/conv1/overview.svg");
+    filterDisplay.find("img").attr("src", "/checkpoints/" + (newPosition - 1) +"/layers/conv1/overview.png?scale=5");
 }
 
 $(document).on("ready", function() {
