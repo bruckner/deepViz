@@ -2,6 +2,7 @@ flask
 pil
 pydot
 networkx
+tornado
 
 # Needed for cuda-convnet:
 python-magic
