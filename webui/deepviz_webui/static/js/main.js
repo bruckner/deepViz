@@ -5,6 +5,8 @@ var playButtonIcon = playButton.find("span");
 var millisPerFrame = 1000;
 
 
+var time_change_callbacks = $.Callbacks();
+
 function TimelineResponsiveImage (request_url) {
     this.dom = $("<div>");
     this.loading_images = {};  // Images that are loading in the background
@@ -33,11 +35,14 @@ function TimelineResponsiveImage (request_url) {
             this.dom.append(img);
         }
     };
+    var outerThis = this;
+    time_change_callbacks.add(function(time) { outerThis.refresh(time); });
 }
 
-var main_filter_image = new TimelineResponsiveImage("/checkpoints/<time>/layers/conv3/overview.png?scale=5");
-filterDisplay.append(main_filter_image.dom);
-
+function ConvLayerDisplay (layer_name) {
+    return new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
+        layer_name + "/overview.png?scale=5");
+}
 
 var timer = $.timer(function() {
     advance_timeline();
@@ -69,8 +74,7 @@ function update_timeline_position(newPosition) {
     } else {
         set_play_button_icon("pause")
     }
-    // Redraw the filter display:
-    main_filter_image.refresh(newPosition - 1);
+    time_change_callbacks.fire(newPosition - 1);
 }
 
 $(document).on("ready", function() {
@@ -107,3 +111,28 @@ $(window).resize(function() {
     $('#main-contentarea-inner').height(h);
     $('#sidebar-inner').height(h);
 }).resize();
+
+
+/* **************************** Layer DAG interactions ****************************************** */
+
+$("#layer-dag").load(function() {
+    var svg = $($("#layer-dag")[0].contentDocument.documentElement);
+    var convLayers = svg.find(".node").filter(function() {
+        var name = $(this).find("title").text();
+        return name.match(/conv\d+$/);
+    });
+    var filterDisplays = {};
+    convLayers.each(function() {
+        var name = $(this).find("title").text();
+        filterDisplays[name] = new ConvLayerDisplay(name);
+    });
+    filterDisplay.append(filterDisplays["conv1"].dom);
+    update_timeline_position(1);
+    // TODO: this styling should be done in CSS or in the underlying SVG:
+    convLayers.attr("fill", "blue");
+    convLayers.on("click", function() {
+        var name = $(this).find("title").text();
+        filterDisplay.empty();
+        filterDisplay.append(filterDisplays[name].dom);
+    })
+});
