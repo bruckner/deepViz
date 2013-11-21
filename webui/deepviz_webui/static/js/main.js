@@ -5,6 +5,39 @@ var playButtonIcon = playButton.find("span");
 var millisPerFrame = 1000;
 
 
+function TimelineResponsiveImage (request_url) {
+    this.dom = $("<div>");
+    this.loading_images = {};  // Images that are loading in the background
+    this.image_cache = {};
+    this.refresh = function(time) {
+        if (time in this.loading_images) {
+            // Already loading
+        } else if (!(time in this.image_cache)) {
+            this.loading_images[time] = true;
+            // We haven't loaded this image before, so defer swapping
+            // the images until it's loaded to avoid flickering.
+            var img = $("<img>").attr("src", request_url.replace("<time>", time));
+            img.hide();
+            // We need to append the image to the DOM in order for it to load
+            this.dom.append(img);
+            var outerThis = this;
+            img.load(function() {
+                delete outerThis.loading_images[time];
+                outerThis.image_cache[time] = img;
+                outerThis.refresh(time);
+            });
+        } else {
+            var img = this.image_cache[time];
+            img.show();
+            this.dom.empty();
+            this.dom.append(img);
+        }
+    };
+}
+
+var main_filter_image = new TimelineResponsiveImage("/checkpoints/<time>/layers/conv3/overview.png?scale=5");
+filterDisplay.append(main_filter_image.dom);
+
 
 var timer = $.timer(function() {
     advance_timeline();
@@ -37,7 +70,7 @@ function update_timeline_position(newPosition) {
         set_play_button_icon("pause")
     }
     // Redraw the filter display:
-    filterDisplay.find("img").attr("src", "/checkpoints/" + (newPosition - 1) +"/layers/conv1/overview.png?scale=5");
+    main_filter_image.refresh(newPosition - 1);
 }
 
 $(document).on("ready", function() {
