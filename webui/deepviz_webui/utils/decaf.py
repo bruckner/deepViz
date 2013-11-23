@@ -22,7 +22,11 @@ def get_layer_dimensions(layer):
     return (num_filters, ksize, num_channels)
 
 
-def reshape_layer_for_visualization(layer, combine_channels=False):
+def flatten_filters(filters, num_filters, num_channels, ksize):
+    return filters.swapaxes(2,3).swapaxes(1,2).reshape(num_filters * num_channels, ksize, ksize)
+
+
+def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims=False):
     """
     Reshape a decaf layer's data to prepare it for visualization.
     This function performs no normalization.
@@ -50,5 +54,7 @@ def reshape_layer_for_visualization(layer, combine_channels=False):
     if combine_channels:
         return filters
     else:
-        # Display each channel separately
-        return filters.swapaxes(2,3).swapaxes(1,2).reshape(num_filters * num_channels, ksize, ksize)
+        # Display each channel separately - we may want to preserve dimensions for future subsetting.
+        if preserve_dims:
+            return filters
+        return flatten_filters(filters)
