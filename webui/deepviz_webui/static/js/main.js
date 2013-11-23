@@ -52,6 +52,17 @@ function ConvLayerDisplay (layer_name, scale) {
     var img = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
             layer_name + "/overview.png?scale=" + scale);
     this.dom.append(img.dom);
+    // Mouseover handlers for the filters:
+    obj.load(function() {
+        var svg = $(obj[0].contentDocument.documentElement);
+        var filterInfo = $("#selected-filter-number");
+        svg.find("rect").on("mouseover", function() {
+            filterInfo.text($(this).attr("id"));
+        });
+        obj.on("mouseout", function() {
+            filterInfo.text("None");
+        });
+    })
 }
 
 var timer = $.timer(function() {

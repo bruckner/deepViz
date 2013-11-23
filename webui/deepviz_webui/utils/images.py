@@ -30,7 +30,13 @@ def generate_svg_filter_map(num_filters, ksize, num_cols, scale=1, padding_px=1)
         for col in range(num_cols):
             x = col * (ksize + padding_px) * scale
             y = row * (ksize + padding_px) * scale
-            svg.add(svg.rect(insert=(x, y), size=filter_img_size, fill="none"))
+            rect = svg.rect(insert=(x, y), size=filter_img_size, fill="none",
+                            id="filter%i;channel%i" % (row, col))
+            # It would be nice to use custom 'data-' attributes here.
+            # It looks like the SVG spec doesn't officially support them,
+            # so `svgwrite` flags them as errors:
+            # see http://stackoverflow.com/questions/15532371
+            svg.add(rect)
     out = StringIO()
     svg.write(out)
     return out.getvalue()
