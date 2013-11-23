@@ -1,7 +1,7 @@
 from deepviz_webui import app, cached
 from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization,\
     get_layer_dimensions
-from deepviz_webui.utils.images import normalize
+from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 
 from decaf.util.visualize import show_multiple
 
@@ -70,13 +70,24 @@ def pylabToPNG(view_func):
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
 @pylabToPNG
-def layer_overview(checkpoint, layername):
+def layer_overview_png(checkpoint, layername):
     model = get_models()[checkpoint]
     layer = model.layers[layername]
     (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
     reshaped = reshape_layer_for_visualization(layer, combine_channels=(num_channels == 3))
     ncols = 1 if num_channels == 3 else num_channels
     return show_multiple(normalize(reshaped), ncols=ncols)
+
+
+@app.route("/layers/<layername>/overview.svg")
+def layer_overview_svg_container(layername):
+    model = get_models()[0]
+    layer = model.layers[layername]
+    (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
+    ncols = 1 if num_channels == 3 else num_channels
+    scale = int(request.args.get('scale', 1))
+    svg = generate_svg_filter_map(num_filters * ncols, ksize, ncols, scale)
+    return Response(svg, mimetype="image/svg+xml")
 
 
 @app.route("/layers.svg")

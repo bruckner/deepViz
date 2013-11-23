@@ -3,6 +3,7 @@ pil
 pydot
 networkx
 tornado
+svgwrite
 
 # Needed for cuda-convnet:
 python-magic

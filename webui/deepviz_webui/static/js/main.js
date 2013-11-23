@@ -39,9 +39,19 @@ function TimelineResponsiveImage (request_url) {
     time_change_callbacks.add(function(time) { outerThis.refresh(time); });
 }
 
-function ConvLayerDisplay (layer_name) {
-    return new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
-        layer_name + "/overview.png?scale=5");
+function ConvLayerDisplay (layer_name, scale) {
+    this.dom = $("<div>");
+    this.dom.attr("class", "filter-display");
+    this.dom.attr("id", "filter-display" + layer_name);
+    var obj = $("<object>");
+    var svg_url = "/layers/" + layer_name + "/overview.svg?scale=" + scale;
+    var id = "filter-display-" + layer_name;
+    obj.attr("data", svg_url);
+    obj.attr("type", "image/svg+xml");
+    this.dom.append(obj);
+    var img = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
+            layer_name + "/overview.png?scale=" + scale);
+    this.dom.append(img.dom);
 }
 
 var timer = $.timer(function() {
@@ -124,7 +134,7 @@ $("#layer-dag").load(function() {
     var filterDisplays = {};
     convLayers.each(function() {
         var name = $(this).find("title").text();
-        filterDisplays[name] = new ConvLayerDisplay(name);
+        filterDisplays[name] = new ConvLayerDisplay(name, 5);
     });
     filterDisplay.append(filterDisplays["conv1"].dom);
     update_timeline_position(1);

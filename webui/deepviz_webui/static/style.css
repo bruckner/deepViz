@@ -39,3 +39,14 @@ body {
     padding: 10px 20px 10px 10px;
 }
 
+.filter-display object, .filter-display img {
+    position: absolute;
+}
+
+.filter-display object {
+    z-index: 3;
+}
+
+.filter-display img {
+    z-index: 2;
+}
