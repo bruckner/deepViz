@@ -53,7 +53,6 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL):
         for l in layers:
             (nfilters, ksize, nchannels) = get_layer_dimensions(model[0].layers[l])
             newfilters[l] = sorted(set(filters) & set(range(nfilters)))
-        print newfilters
         filters = newfilters
     
     #Do something reasonable if channels is a list.
@@ -106,8 +105,6 @@ def select_region_query(model, args):
         
     filters = parse_range(args.get('filters', ALL))
     channels = parse_range(args.get('channels', ALL))
-    print filters
-    print channels
     
     return select_region(model, times, layers, filters, channels)
     
@@ -125,7 +122,7 @@ def main(args):
     
     print select_region_query(model, {"times":"0","layers":"conv1"})
     
-    print select_region_query(model, {"times":"0-4", "layers":"conv1", "filters":"1-5", "channels":"1,3"})
+    print select_region_query(model, {"times":"0-4", "layers":"conv1,conv2", "filters":"1-5", "channels":"1,3"})
     
 if __name__ == "__main__":
     import sys
