@@ -1,4 +1,5 @@
 from deepviz_webui import app, cached
+from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
 from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization,\
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
@@ -18,6 +19,25 @@ import os
 
 _models = None
 _model = None  # TODO: remove this once the graph is drawn from Decaf
+_image_corpus = None
+
+
+def get_image_corpus():
+    global _image_corpus
+    if _image_corpus is None:
+        _image_corpus = CIFAR10ImageCorpus(app.config["CIFAR_10_PATH"])
+    return _image_corpus
+
+
+@app.route("/imagecorpus/<filename>")
+def get_image_from_corpus(filename):
+    corpus = get_image_corpus()
+    image = corpus.get_image(filename)
+    png_buffer = StringIO()
+    image.save(png_buffer, format="PNG")
+    png = png_buffer.getvalue()
+    png_buffer.close()
+    return Response(png, mimetype="image/png")
 
 
 def get_models():

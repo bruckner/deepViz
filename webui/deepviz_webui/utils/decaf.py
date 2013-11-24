@@ -43,7 +43,7 @@ def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims
     # Here, we have a two dimensional array, where each row represents one filter
     # and the columns are the filter's values laid out channel-by-channel.
     # For example, given 32 RGB 5x5 image filters, this would be a 32 x 75
-    # array, where each row is [red0, ... red25, green0, ..., green24, red0, ..., red24]
+    # array, where each row is [red0, ... red25, green0, ..., green24, blue0, ..., blue24]
     filters = layer.param()[0].data().T
 
     # Here, we reshape each row into a filter-shaped matrix, where each entry contains
