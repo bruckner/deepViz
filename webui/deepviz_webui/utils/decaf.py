@@ -57,4 +57,4 @@ def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims
         # Display each channel separately - we may want to preserve dimensions for future subsetting.
         if preserve_dims:
             return filters
-        return flatten_filters(filters)
+        return flatten_filters(filters, num_filters, num_channels, ksize)
