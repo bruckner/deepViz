@@ -1,10 +1,10 @@
 from deepviz_webui import app, cached
 from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
-from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization,\
+from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization, \
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 
-from decaf.util.visualize import show_multiple
+from decaf.util.visualize import show_multiple, show_channels
 
 from flask import render_template, request, Response
 
@@ -13,6 +13,7 @@ from functools import wraps
 from gpumodel import IGPUModel
 from matplotlib import pyplot, cm
 import networkx as nx
+import numpy as np
 from PIL import Image
 from shownet import ShowConvNet
 import os
@@ -79,7 +80,6 @@ def pylabToPNG(view_func):
         if scale != 1:
             (width, height) = image.size
             image = image.resize((width * scale, height * scale), Image.NEAREST)
-        png_buffer.close()
         png_buffer = StringIO()
         image.save(png_buffer, format="PNG")
         png = png_buffer.getvalue()
@@ -97,6 +97,22 @@ def layer_overview_png(checkpoint, layername):
     reshaped = reshape_layer_for_visualization(layer, combine_channels=(num_channels == 3))
     ncols = 1 if num_channels == 3 else num_channels
     return show_multiple(normalize(reshaped), ncols=ncols)
+
+
+@app.route("/checkpoints/<int:checkpoint>/layers/<layername>/apply/<imagename>/overview.png")
+@pylabToPNG
+def convolved_layer_overview_png(checkpoint, imagename, layername):
+    """
+    Visualizes the applications of a layer's filters to an image.
+    """
+    # This is based on decaf's "imagenet" script:
+    corpus = get_image_corpus()
+    image = corpus.get_image(imagename + ".png")
+    model = get_models()[checkpoint]
+    arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
+    classified = model.predict(data=arr, output_blobs=[layername + "_cudanet_out"])
+    layer = classified[layername + "_cudanet_out"][0, :, :, :]
+    return show_channels(layer)
 
 
 @app.route("/layers/<layername>/overview.svg")

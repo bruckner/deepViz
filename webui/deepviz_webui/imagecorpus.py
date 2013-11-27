@@ -16,7 +16,7 @@ class CIFAR10ImageCorpus(object):
             self.label_names = meta['label_names']
         batches = sorted(os.listdir(root_folder))[1:]  # Skip batches.meta.
         self._image_data = None
-        self._filenames = {}
+        self.filenames = {}
         for batch in batches:
             with open(os.path.join(root_folder, batch)) as batchfile:
                 data = cPickle.load(batchfile)
@@ -28,10 +28,10 @@ class CIFAR10ImageCorpus(object):
                     offset = self._image_data.shape[0]
                     self._image_data = np.concatenate((self._image_data, data['data'].T))
                 for (counter, filename) in enumerate(data['filenames']):
-                    self._filenames[filename] = offset + counter
+                    self.filenames[filename] = offset + counter
 
     def get_image(self, filename):
-        data = self._image_data[self._filenames[filename]]
+        data = self._image_data[self.filenames[filename]]
         ksize = sqrt(len(data) / 3)
         rgb_data = np.rot90(np.reshape(data, (ksize, ksize, 3), 'F'), 3)
         return Image.fromarray(rgb_data)
