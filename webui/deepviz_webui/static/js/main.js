@@ -62,8 +62,10 @@ function ConvLayerDisplay (layer_name, scale) {
         obj.on("mouseout", function() {
             filterInfo.text("None");
         });
-    })
+    });
 }
+
+
 
 var timer = $.timer(function() {
     advance_timeline();
@@ -149,23 +151,24 @@ $("#layer-dag").load(function() {
     });
     convLayers.each(function () { this.classList.add('conv') });
 
-    var filterDisplays = {};
     convLayers.each(function() {
         var name = $(this).find("title").text();
-        filterDisplays[name] = new ConvLayerDisplay(name, 5);
+        filterDisplay.append(new ConvLayerDisplay(name, 5).dom);
     });
     function selectNode($node) {
         clearSelection();
         $node.get(0).classList.add("selected");
         var name = $node.find("title").text();
-        filterDisplay.append(filterDisplays[name].dom);
+        filterDisplay.find('#filter-display' + name).css('position', 'initial')
     }
     function clearSelection() {
         convLayers.each(function () { this.classList.remove("selected") });
-        filterDisplay.empty();
+        // Hide images by positioning them offscreen.  Avoids a reload that occurs
+        // when <object> display style changes.
+        filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
     }
     update_timeline_position(1);
-    convLayers.click(function (e) { selectNode($(this)) });
+    convLayers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
     selectNode(convLayers.find(':contains("conv1")').closest("g"));
 });
 
