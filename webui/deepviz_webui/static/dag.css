@@ -1,7 +1,14 @@
 
+.node.conv {
+  cursor: pointer;
+}
+
 .node.conv text {
   fill: blue;
-  cursor: pointer;
+}
+
+.node ellipse {
+  fill: white;
 }
 
 .node.selected ellipse {
