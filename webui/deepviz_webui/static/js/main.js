@@ -147,13 +147,18 @@ $("#layer-dag").load(function() {
         var name = $(this).find("title").text();
         filterDisplays[name] = new ConvLayerDisplay(name, 5);
     });
-    filterDisplay.append(filterDisplays["conv1"].dom);
-    update_timeline_position(1);
-    // TODO: this styling should be done in CSS or in the underlying SVG:
-    convLayers.attr("fill", "blue");
-    convLayers.on("click", function() {
-        var name = $(this).find("title").text();
-        filterDisplay.empty();
+    function selectNode($node) {
+        clearSelection();
+        $node.get(0).classList.add("selected");
+        var name = $node.find("title").text();
         filterDisplay.append(filterDisplays[name].dom);
-    })
+    }
+    function clearSelection() {
+        convLayers.each(function () { this.classList.remove("selected") });
+        filterDisplay.empty();
+    }
+    update_timeline_position(1);
+    convLayers.click(function (e) { selectNode($(this)) });
+    selectNode(convLayers.filter('[name="conv1"]'));
 });
+
