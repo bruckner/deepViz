@@ -39,6 +39,10 @@ body {
     padding: 10px 20px 10px 10px;
 }
 
+.filter-display {
+  overflow: hidden;
+}
+
 .filter-display object, .filter-display img {
     position: absolute;
 }
@@ -50,3 +54,4 @@ body {
 .filter-display img {
     z-index: 2;
 }
+
