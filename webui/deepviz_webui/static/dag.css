@@ -1,0 +1,10 @@
+
+.node.conv text {
+  fill: blue;
+  cursor: pointer;
+}
+
+.node.selected ellipse {
+  fill: #E0E0E0;
+}
+

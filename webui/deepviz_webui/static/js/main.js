@@ -137,11 +137,18 @@ $(window).resize(function() {
 /* **************************** Layer DAG interactions ****************************************** */
 
 $("#layer-dag").load(function() {
-    var svg = $($("#layer-dag")[0].contentDocument.documentElement);
-    var convLayers = svg.find(".node").filter(function() {
+    var svg = $("#layer-dag")[0].contentDocument,
+        $svg = $(svg.documentElement),
+        css = svg.createElementNS("http://www.w3.org/2000/svg", "style");
+    css.textContent = "@import url('/static/dag.css')";
+    $svg.append(css);
+
+    var convLayers = $svg.find(".node").filter(function() {
         var name = $(this).find("title").text();
         return name.match(/conv\d+$/);
     });
+    convLayers.each(function () { this.classList.add('conv') });
+
     var filterDisplays = {};
     convLayers.each(function() {
         var name = $(this).find("title").text();
@@ -159,6 +166,6 @@ $("#layer-dag").load(function() {
     }
     update_timeline_position(1);
     convLayers.click(function (e) { selectNode($(this)) });
-    selectNode(convLayers.filter('[name="conv1"]'));
+    selectNode(convLayers.find(':contains("conv1")').closest("g"));
 });
 
