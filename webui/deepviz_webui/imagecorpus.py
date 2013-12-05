@@ -30,6 +30,15 @@ class CIFAR10ImageCorpus(object):
                 for (counter, filename) in enumerate(data['filenames']):
                     self.filenames[filename] = offset + counter
 
+    def find_images(self, query):
+        """
+        Return the names of images that match a query
+        """
+        for image_name in self.filenames.keys():
+            if query in image_name:
+                yield image_name
+
+
     def get_image(self, filename):
         data = self._image_data[self.filenames[filename]]
         ksize = sqrt(len(data) / 3)

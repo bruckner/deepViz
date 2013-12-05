@@ -42,16 +42,17 @@ function TimelineResponsiveImage (request_url) {
 function ConvLayerDisplay (layer_name, scale) {
     this.dom = $("<div>");
     this.dom.attr("class", "filter-display");
-    this.dom.attr("id", "filter-display" + layer_name);
+    var id = "filter-display-" + layer_name;
+    this.dom.attr("id", id);
     var obj = $("<object>");
     var svg_url = "/layers/" + layer_name + "/overview.svg?scale=" + scale;
-    var id = "filter-display-" + layer_name;
     obj.attr("data", svg_url);
     obj.attr("type", "image/svg+xml");
     this.dom.append(obj);
     var img = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
             layer_name + "/overview.png?scale=" + scale);
     this.dom.append(img.dom);
+    this.refresh = function(time) { img.refresh(time) };
     // Mouseover handlers for the filters:
     obj.load(function() {
         var svg = $(obj[0].contentDocument.documentElement);
@@ -114,6 +115,10 @@ function timeline_at_end() {
     return slider.val() == slider.attr("max")
 }
 
+function current_time() {
+    return slider.val();
+}
+
 playButton.on("click", function() {
     var icon = playButton.find("span");
     if (timeline_at_end()) {
@@ -138,6 +143,10 @@ $(window).resize(function() {
 
 /* **************************** Layer DAG interactions ****************************************** */
 
+var convLayers = null;
+var current_layer = null;
+var current_image = "";
+
 $("#layer-dag").load(function() {
     var svg = $("#layer-dag")[0].contentDocument,
         $svg = $(svg.documentElement),
@@ -145,30 +154,92 @@ $("#layer-dag").load(function() {
     css.textContent = "@import url('/static/dag.css')";
     $svg.append(css);
 
-    var convLayers = $svg.find(".node").filter(function() {
+    convLayers = $svg.find(".node").filter(function() {
         var name = $(this).find("title").text();
         return name.match(/conv\d+$/);
     });
     convLayers.each(function () { this.classList.add('conv') });
 
-    convLayers.each(function() {
-        var name = $(this).find("title").text();
-        filterDisplay.append(new ConvLayerDisplay(name, 5).dom);
-    });
     function selectNode($node) {
-        clearSelection();
-        $node.get(0).classList.add("selected");
         var name = $node.find("title").text();
-        filterDisplay.find('#filter-display' + name).css('position', 'initial')
-    }
-    function clearSelection() {
+        showFilterForLayer(name);
+        current_layer = name;
         convLayers.each(function () { this.classList.remove("selected") });
-        // Hide images by positioning them offscreen.  Avoids a reload that occurs
-        // when <object> display style changes.
-        filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
+        $node.get(0).classList.add("selected");
     }
-    update_timeline_position(1);
+
     convLayers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
     selectNode(convLayers.find(':contains("conv1")').closest("g"));
 });
 
+
+function showFilterForLayer(name) {
+    // Hide images by positioning them offscreen.  Avoids a reload that occurs
+    // when <object> display style changes.
+    filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
+    getOrElseCreateConvLayerDisplay(name, current_image).css('position', 'initial');
+}
+
+/* ************************************ Filter Display ****************************************** */
+
+function getOrElseCreateConvLayerDisplay(layer_name, image_name) {
+    var image;
+    if (image_name == "") {
+        image = filterDisplay.find("#filter-display-" + layer_name)
+    } else {
+        image = filterDisplay.find("#filter-display-" + layer_name + "-" + image_name);
+    }
+    if (image.length > 0) {
+        console.log("Found cached filter view for layer " + layer_name + " and image " + image_name);
+        return image;
+    } else {
+        if (image_name == "") {
+            image = new ConvLayerDisplay(layer_name, 5);
+        } else {
+            image = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
+                layer_name + "/apply/" + image_name +"/overview.png?scale=3");
+        }
+        console.log("Creating filter view for layer " + layer_name + " and image " + image_name);
+        image.refresh(current_time());
+        image.dom.attr("id", "filter-display-" + layer_name + "-" + image_name);
+        image.dom.css('position', 'relative').css('left', 100000);
+        image.dom.addClass("filter-display");
+        filterDisplay.append(image.dom);
+        return image.dom;
+    }
+}
+
+
+/* *********************************** Image Selection ****************************************** */
+
+
+
+$(document).ready(function() {
+    var timer = null;
+
+    function updateImageSearchResults(query) {
+        console.log("Issuing image corpus query for '" + query + "'");
+        $.ajax({
+            url: "/imagecorpus/search/" + query
+        }).done(function(data) {
+            console.log("Image corpus query returned " + data.split('\n').length + " results");
+            var results = $("#image-search-results");
+            results.empty();
+            $.each(data.split('\n'), function(idx, filename) {
+                var url = "/imagecorpus/" + filename;
+                var img = $("<img>").attr("src", url).attr("title", filename.slice(0, -4));
+                results.append(img);
+            });
+            results.find("img").on("click", function() {
+                current_image = $(this).attr("title");
+                showFilterForLayer(current_layer);
+            });
+        });
+    }
+
+    $('#image-search-input').keyup(function() {
+        clearTimeout(timer);
+        var target = $(this);
+        timer = setTimeout(function() { updateImageSearchResults(target.val()); }, 500);
+    });
+});

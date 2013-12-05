@@ -55,3 +55,8 @@ body {
     z-index: 2;
 }
 
+
+#imagechooser input {
+    width: 100%;
+    margin-bottom: 10px;
+}

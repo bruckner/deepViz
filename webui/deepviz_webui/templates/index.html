@@ -22,15 +22,13 @@
                     <p><b>Selected filter: </b><span id="selected-filter-number">None</span></p>
                 </div>
             </div>
-            <div class="panel panel-default">
+            <div class="panel panel-default" id="imagechooser">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Model <tt>__dict__</tt> fields</h3>
+                    <h3 class="panel-title">Training Images</h3>
                 </div>
                 <div class="panel-body">
-                    <ul>
-                        {% for key in model.__dict__.keys()|sort %}
-                            <li>{{ key }}</li>
-                        {% endfor %}
+                    <input id="image-search-input" placeholder="Search Image Corpus">
+                    <ul id="image-search-results">
                     </ul>
                 </div>
             </div>

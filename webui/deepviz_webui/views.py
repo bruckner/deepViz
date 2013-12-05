@@ -41,6 +41,14 @@ def get_image_from_corpus(filename):
     return Response(png, mimetype="image/png")
 
 
+@app.route("/imagecorpus/search/<query>")
+def image_corpus_query(query):
+    corpus = get_image_corpus()
+    image_names = list(corpus.find_images(query))
+    return Response("\n".join(image_names), mimetype="text/plain")
+
+
+
 def get_models():
     global _models
     if _models is None:
