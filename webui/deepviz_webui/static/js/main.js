@@ -116,7 +116,7 @@ function timeline_at_end() {
 }
 
 function current_time() {
-    return slider.val();
+    return slider.val() - 1;
 }
 
 playButton.on("click", function() {
@@ -198,10 +198,10 @@ function getOrElseCreateConvLayerDisplay(layer_name, image_name) {
         } else {
             image = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
                 layer_name + "/apply/" + image_name +"/overview.png?scale=3");
+            image.dom.attr("id", "filter-display-" + layer_name + "-" + image_name);
         }
         console.log("Creating filter view for layer " + layer_name + " and image " + image_name);
         image.refresh(current_time());
-        image.dom.attr("id", "filter-display-" + layer_name + "-" + image_name);
         image.dom.css('position', 'relative').css('left', 100000);
         image.dom.addClass("filter-display");
         filterDisplay.append(image.dom);
