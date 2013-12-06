@@ -39,7 +39,7 @@ function TimelineResponsiveImage (request_url) {
     time_change_callbacks.add(function(time) { outerThis.refresh(time); });
 }
 
-function ConvLayerDisplay (layer_name, scale) {
+function WeightLayerDisplay (layer_name, scale) {
     this.dom = $("<div>");
     this.dom.attr("class", "filter-display");
     var id = "filter-display-" + layer_name;
@@ -143,7 +143,7 @@ $(window).resize(function() {
 
 /* **************************** Layer DAG interactions ****************************************** */
 
-var convLayers = null;
+var weightLayers = null;
 var current_layer = null;
 var current_image = "";
 
@@ -154,22 +154,22 @@ $("#layer-dag").load(function() {
     css.textContent = "@import url('/static/dag.css')";
     $svg.append(css);
 
-    convLayers = $svg.find(".node").filter(function() {
+    var weightLayers = $svg.find(".node").filter(function() {
         var name = $(this).find("title").text();
-        return name.match(/conv\d+$/);
+        return name.match(/(conv|fc)\d+$/);
     });
-    convLayers.each(function () { this.classList.add('conv') });
+    weightLayers.each(function () { this.classList.add('conv') });
 
     function selectNode($node) {
         var name = $node.find("title").text();
         showFilterForLayer(name);
         current_layer = name;
-        convLayers.each(function () { this.classList.remove("selected") });
+        weightLayers.each(function () { this.classList.remove("selected") });
         $node.get(0).classList.add("selected");
     }
 
-    convLayers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
-    selectNode(convLayers.find(':contains("conv1")').closest("g"));
+    weightLayers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
+    selectNode(weightLayers.find(':contains("conv1")').closest("g"));
 });
 
 
@@ -177,12 +177,12 @@ function showFilterForLayer(name) {
     // Hide images by positioning them offscreen.  Avoids a reload that occurs
     // when <object> display style changes.
     filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
-    getOrElseCreateConvLayerDisplay(name, current_image).css('position', 'initial');
+    getOrElseCreateWeightLayerDisplay(name, current_image).css('position', 'initial');
 }
 
 /* ************************************ Filter Display ****************************************** */
 
-function getOrElseCreateConvLayerDisplay(layer_name, image_name) {
+function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
     var image;
     if (image_name == "") {
         image = filterDisplay.find("#filter-display-" + layer_name)
@@ -194,7 +194,7 @@ function getOrElseCreateConvLayerDisplay(layer_name, image_name) {
         return image;
     } else {
         if (image_name == "") {
-            image = new ConvLayerDisplay(layer_name, 5);
+            image = new WeightLayerDisplay(layer_name, 5);
         } else {
             image = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
                 layer_name + "/apply/" + image_name +"/overview.png?scale=3");
