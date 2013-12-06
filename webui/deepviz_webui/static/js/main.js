@@ -1,13 +1,14 @@
-var slider = $("#timeline-slider");
-var playButton = $("#timeline-button");
 var filterDisplay = $("#filter-display");
-var playButtonIcon = playButton.find("span");
-var millisPerFrame = 1000;
 
+var numFrames = parseInt($("#num-timesteps").text());
+var timeline = new TimelineControl(numFrames, 1000);
+$(document).ready(function() {
+    $("#footer").append(timeline.dom);
+});
 
-var time_change_callbacks = $.Callbacks();
+/* *************************** UI Elements / Controls ******************************************* */
 
-function TimelineResponsiveImage (request_url) {
+function TimelineResponsiveImage (timeline, request_url) {
     this.dom = $("<div>");
     this.loading_images = {};  // Images that are loading in the background
     this.image_cache = {};
@@ -36,10 +37,10 @@ function TimelineResponsiveImage (request_url) {
         }
     };
     var outerThis = this;
-    time_change_callbacks.add(function(time) { outerThis.refresh(time); });
+    timeline.registerCallback(function(time) { outerThis.refresh(time); });
 }
 
-function WeightLayerDisplay (layer_name, scale) {
+function WeightLayerDisplay (timeline, layer_name, scale) {
     this.dom = $("<div>");
     this.dom.attr("class", "filter-display");
     var id = "filter-display-" + layer_name;
@@ -49,7 +50,7 @@ function WeightLayerDisplay (layer_name, scale) {
     obj.attr("data", svg_url);
     obj.attr("type", "image/svg+xml");
     this.dom.append(obj);
-    var img = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
+    var img = new TimelineResponsiveImage(timeline, "/checkpoints/<time>/layers/" +
             layer_name + "/overview.png?scale=" + scale);
     this.dom.append(img.dom);
     this.refresh = function(time) { img.refresh(time) };
@@ -66,73 +67,102 @@ function WeightLayerDisplay (layer_name, scale) {
     });
 }
 
+function TimelineControl(numFrames, millisPerFrame) {
+    var timeline = this;
 
+    /* Construct the UI controls */
+    this.dom = $("<div>");
+    this.dom.attr("class", "timeline");
 
-var timer = $.timer(function() {
-    advance_timeline();
-    if (timeline_at_end()) {
-        playButton.click();
+    var playButton = $("<a>", {
+        "href": "#",
+        "type": "button",
+        "class": "btn btn-default btn-sm"
+    });
+    var playButtonIcon = $("<span>", {"class" : "glyphicon glyphicon-play"});
+    playButton.append(playButtonIcon);
+    function set_play_button_icon(iconName) {
+        playButtonIcon.removeClass();
+        playButtonIcon.addClass("glyphicon glyphicon-" + iconName);
     }
-});
-timer.set({ time: millisPerFrame});
-
-slider.change(function() {
-    update_timeline_position(this.value);
-});
-
-function set_play_button_icon(iconName) {
-    playButtonIcon.removeClass();
-    playButtonIcon.addClass("glyphicon glyphicon-" + iconName);
-}
-
-function update_timeline_position(newPosition) {
-    // Handle the playback button's state transitions:
-    $("#timeline-position").text(newPosition);
-    slider.val(newPosition);
-    if (!timer.isActive) {
-        if (!timeline_at_end()) {
-            set_play_button_icon("play")
+    playButton.on("click", function() {
+        if (timeline.atEnd()) {
+            if (!timer.isActive) {
+                timeline.seekToPosition(1);
+                set_play_button_icon("pause")
+            } else {
+                set_play_button_icon("repeat");
+            }
         } else {
-            set_play_button_icon("repeat")
+            playButtonIcon.toggleClass("glyphicon-play glyphicon-pause");
         }
-    } else {
-        set_play_button_icon("pause")
-    }
-    time_change_callbacks.fire(newPosition - 1);
-}
+        timer.toggle(true);
+    });
 
-$(document).on("ready", function() {
-    update_timeline_position(1);
-});
+    var slider = $("<input>", {
+        "type": "range",
+        "min": 1,
+        "max": numFrames,
+        "step": 1,
+        "val": 1
+    }).change(function() {
+        timeline.seekToPosition(this.value);
+    });
 
-function advance_timeline() {
-    if (!timeline_at_end()) {
-        update_timeline_position(parseInt(slider.val()) + 1)
-    }
-}
+    var badge = $("<span>", {"class" : "badge"}).text("1/" + numFrames);
 
-function timeline_at_end() {
-    return slider.val() == slider.attr("max")
-}
+    this.dom.append([playButton, slider, badge]);
 
-function current_time() {
-    return slider.val() - 1;
-}
+    /* Set up a timer to enable playback */
+    var timer = $.timer(function() {
+        timeline.advance();
+        if (timeline.atEnd()) {
+            playButton.click();
+        }
+    });
+    timer.set({ time: millisPerFrame});
 
-playButton.on("click", function() {
-    var icon = playButton.find("span");
-    if (timeline_at_end()) {
+
+    /* Components can register to receive callbacks when the time changes */
+    var time_change_callbacks = $.Callbacks();
+    this.registerCallback = function(callback) {
+        time_change_callbacks.add(callback);
+    };
+
+    /* Methods for programatically controlling the timeline */
+
+    this.currentPosition = function() {
+        return parseInt(slider.val());
+    };
+
+    this.atEnd = function() {
+        return timeline.currentPosition() == numFrames;
+    };
+
+    this.advance = function() {
+        if (!timeline.atEnd()) {
+            timeline.seekToPosition(timeline.currentPosition() + 1)
+        }
+    };
+
+    this.seekToPosition = function(newPosition) {
+        // Handle the playback button's state transitions:
+        badge.text(newPosition + "/" + numFrames);
+        slider.val(newPosition);
         if (!timer.isActive) {
-            update_timeline_position(1);
-            set_play_button_icon("pause")
+            if (!timeline.atEnd()) {
+                set_play_button_icon("play")
+            } else {
+                set_play_button_icon("repeat")
+            }
         } else {
-            set_play_button_icon("repeat");
+            set_play_button_icon("pause")
         }
-    } else {
-        icon.toggleClass("glyphicon-play glyphicon-pause");
-    }
-    timer.toggle(true);
-});
+        time_change_callbacks.fire(newPosition - 1);
+    };
+}
+
+/* ***************************** Window Scaling ************************************************* */
 
 $(window).resize(function() {
     var h = $(window).height() - $("#footer").height() - $("#header").height();
@@ -199,14 +229,14 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
         return image;
     } else {
         if (image_name == "") {
-            image = new WeightLayerDisplay(layer_name, 5);
+            image = new WeightLayerDisplay(timeline, layer_name, 5);
         } else {
-            image = new TimelineResponsiveImage("/checkpoints/<time>/layers/" +
+            image = new TimelineResponsiveImage(timeline, "/checkpoints/<time>/layers/" +
                 layer_name + "/apply/" + image_name +"/overview.png?scale=3");
             image.dom.attr("id", "filter-display-" + layer_name + "-" + image_name);
         }
         console.log("Creating filter view for layer " + layer_name + " and image " + image_name);
-        image.refresh(current_time());
+        image.refresh(timeline.currentPosition() - 1);
         image.dom.css('position', 'relative').css('left', 100000);
         image.dom.addClass("filter-display");
         filterDisplay.append(image.dom);

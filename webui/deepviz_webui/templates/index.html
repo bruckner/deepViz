@@ -54,18 +54,7 @@
     </div>
 
     <div class="navbar navbar-default navbar-fixed-bottom" id="footer" role="navigation">
-        <div id="timeline">
-            <a href="#" type="button" class="btn btn-default btn-sm" id="timeline-button">
-                <span class="glyphicon glyphicon-play"></span>
-            </a>
-            <input type="range"
-                   min="1"
-                   max="{{ num_timesteps }}"
-                   step="1"
-                   value="1"
-                   id="timeline-slider">
-            <span class="badge"><span id="timeline-position">1</span>/{{ num_timesteps }}</span>
-        </div>
+        <span class="hidden" id="num-timesteps">{{ num_timesteps }}</span>
     </div>
     <script src="static/js/main.js" charset="utf-8"></script>
 {% endblock %}
