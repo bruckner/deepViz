@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from decaf.util import visualize, translator
 from gpumodel import IGPUModel
 from math import sqrt
+from decaf.layers import *
 
 
 def load_from_convnet(filename):
@@ -16,9 +17,14 @@ def load_from_convnet(filename):
 
 
 def get_layer_dimensions(layer):
-    num_filters = layer.spec['num_kernels']
-    ksize = layer.spec['ksize']  # The length of one side of the square filter
-    num_channels = layer.param()[0].data().shape[0]/ (ksize * ksize)
+    if isinstance(layer, InnerProductLayer):
+        ksize = sqrt(layer._weight.data().shape[0])
+        num_filters = layer._num_output
+        num_channels = 1
+    elif isinstance(layer, ConvolutionLayer):
+        num_filters = layer.spec['num_kernels']
+        ksize = layer.spec['ksize']  # The length of one side of the square filter
+        num_channels = layer.param()[0].data().shape[0]/ (ksize * ksize)
     return (num_filters, ksize, num_channels)
 
 
@@ -61,5 +67,4 @@ def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims
         if preserve_dims:
             return filters
         return flatten_filters(filters, num_filters, num_channels, ksize)
-        
-    
+
