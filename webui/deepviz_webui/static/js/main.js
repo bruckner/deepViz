@@ -143,7 +143,6 @@ $(window).resize(function() {
 
 /* **************************** Layer DAG interactions ****************************************** */
 
-var weightLayers = null;
 var current_layer = null;
 var current_image = "";
 
@@ -174,10 +173,16 @@ $("#layer-dag").load(function() {
 
 
 function showFilterForLayer(name) {
+    var image_name;
+    if (name.match(/conv\d+$/)) {
+        image_name = current_image;
+    } else {
+        image_name = "";
+    }
     // Hide images by positioning them offscreen.  Avoids a reload that occurs
     // when <object> display style changes.
     filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
-    getOrElseCreateWeightLayerDisplay(name, current_image).css('position', 'initial');
+    getOrElseCreateWeightLayerDisplay(name, image_name).css('position', 'initial');
 }
 
 /* ************************************ Filter Display ****************************************** */
