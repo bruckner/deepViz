@@ -17,10 +17,22 @@ import numpy as np
 from PIL import Image
 from shownet import ShowConvNet
 import os
+import base64
+import json
 
 _models = None
 _model = None  # TODO: remove this once the graph is drawn from Decaf
 _image_corpus = None
+
+#Silly function to map a value to all terminal items of a nested object.
+#Has the nice property of maintaining input's shape.
+def mapterminals(f, d):
+  if isinstance(d, dict):
+      return dict([(k,mapterminals(f, v)) for k,v in d.iteritems()])
+  if isinstance(d, list):
+      return [mapterminals(f, v) for v in d]
+  else:
+      return f(d)
 
 
 def get_image_corpus():
@@ -94,6 +106,35 @@ def pylabToPNG(view_func):
         png_buffer.close()
         return Response(png, mimetype="image/png")
     return wraps(view_func)(_decorator)
+    
+def image_to_png(image_data):
+    png_buffer = StringIO()
+    pyplot.imsave(png_buffer, image_data, cmap=cm.gray, format='png')
+    png_buffer.reset()
+    image = Image.open(png_buffer)
+    scale = int(request.args.get('scale', 1))
+    if scale != 1:
+        (width, height) = image.size
+        image = image.resize((width * scale, height * scale), Image.NEAREST)
+    png_buffer = StringIO()
+    image.save(png_buffer, format="PNG")
+    png = png_buffer.getvalue()
+    png_buffer.close()
+    return png_buffer
+    
+def pylabToJsonBase64PNGs(view_func):
+    """
+    Decorator for creating views that return pylab images as a JSON object filled with base64 encoded pngs.
+    Adds querystring options for performing scaling.
+    """
+    def _decorator(*args, **kwargs):
+        images_data = view_func(*args, **kwargs)
+        transformer = lambda buf: "data:image/png;base64," + base64.urlsafe_b64encode(image_to_png(buf))
+        images_data = mapterminals(transformer, images_data)
+                
+        return Response(json.dumps(images_data), mimetype="application/json")
+    return wraps(view_func)(_decorator)
+
 
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
@@ -132,6 +173,23 @@ def layer_overview_svg_container(layername):
     scale = int(request.args.get('scale', 1))
     svg = generate_svg_filter_map(num_filters * ncols, ksize, ncols, scale)
     return Response(svg, mimetype="image/svg+xml")
+    
+    
+@app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/overview.json")
+@pylabToJsonBase64PNGs
+def layer_filters_channels_overview_json(checkpoints, layernames, filters, channels):
+    region = select_region_query(checkpoints, layernames, filters, channels)
+    images = mapterminals(show_multiple, region)
+    #todo need to apply show_multiple to each one of these.
+    return images
+    
+    
+@app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/apply/<imagename>/overview.json")
+@pylabToJsonBase64PNGs
+def layer_filters_channels_image_json(checkpoints, layernames, filters, channels, imagename):
+    out = select_region_query(checkpoints, layernames, filters, channels, imagename)
+    #todo need to apply show_multiple to each one of these.
+    return out
 
 
 @app.route("/layers.svg")

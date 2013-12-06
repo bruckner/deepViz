@@ -26,7 +26,7 @@ def flatten_filters(filters, num_filters, num_channels, ksize):
     return filters.swapaxes(2,3).swapaxes(1,2).reshape(num_filters * num_channels, ksize, ksize)
 
 
-def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims=False):
+def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims=False, prediction=None):
     """
     Reshape a decaf layer's data to prepare it for visualization.
     This function performs no normalization.
@@ -44,7 +44,10 @@ def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims
     # and the columns are the filter's values laid out channel-by-channel.
     # For example, given 32 RGB 5x5 image filters, this would be a 32 x 75
     # array, where each row is [red0, ... red25, green0, ..., green24, blue0, ..., blue24]
-    filters = layer.param()[0].data().T
+    if prediction is not None:
+        filters = prediction.T
+    else:
+        filters = layer.param()[0].data().T
 
     # Here, we reshape each row into a filter-shaped matrix, where each entry contains
     # the values of that pixel in each channel.  For our 5x5 RGB example,
@@ -58,3 +61,5 @@ def reshape_layer_for_visualization(layer, combine_channels=False, preserve_dims
         if preserve_dims:
             return filters
         return flatten_filters(filters, num_filters, num_channels, ksize)
+        
+    

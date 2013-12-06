@@ -6,6 +6,8 @@ from matplotlib import pyplot
 from decaf.util import visualize
 from decaf.util import translator
 from gpumodel import IGPUModel
+import numpy as np
+import time
 
 
 def parse_args():
@@ -25,7 +27,7 @@ def visualize_layer(l):
     print l.param()
     if len(l.param()) < 1:
         return None
-    filters = l.param()[0]#.data()
+    filters = l.param()[0].data()
     _ = visualize.show_multiple(filters.T)
     return _
     
@@ -55,6 +57,10 @@ def main():
     net = load_net(args.model)
     print "Showing off: %s" % net.layers.keys()
     visualize_layer(net.layers['conv1'])
+    time.sleep(5)
+    #feat = net.feature('conv1_cudanet_out')#[0,::-1, :, ::3]
+    
+    #visualize.show_channels(feat)
     
 if __name__ == "__main__":
     main()

@@ -14,13 +14,13 @@ Queries are supported with a filtering syntax. The default filter for all layers
 """
 
 #Converts results of decaf viz to an svg.
-def get_svg(dat):
+def get_svg(dat, format='svg'):
     if dat is None:
         return None
         
     imgdata = StringIO.StringIO()
     print dat
-    pyplot.imsave(imgdata, dat, cmap = cm.gray, format='svg')
+    pyplot.imsave(imgdata, dat, cmap = cm.gray, format=format)
     #print np.array(dat).shape
     #print np.array(dat).shape[::-1]
     #pyplot.imsave("stuff%d.png" % i, dat, cmap = cm.gray)
