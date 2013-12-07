@@ -274,20 +274,39 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
 
 
 function selectImage(imageName) {
+    if (imageName == "") {
+        $("#selected-image-panel").hide();
+        $("#clear-image-button").addClass("disabled");
+    } else {
+        $("#clear-image-button").removeClass("disabled");
+        $("#selected-image").attr("src", "/imagecorpus/" + imageName + ".png?scale=4");
+        $("#selected-image-panel").show();
+    }
     updateActiveLayers();
     showFilterForLayer(current_layer);
 }
+
+$("#clear-image-button").click(function() {
+    if (current_image != "") {
+        current_image = "";
+        selectImage(current_image);
+    }
+});
 
 $(document).ready(function() {
     var timer = null;
 
     function updateImageSearchResults(query) {
+        var results = $("#image-search-results");
         console.log("Issuing image corpus query for '" + query + "'");
+        if (query == "") {
+            results.empty();
+            return;
+        }
         $.ajax({
             url: "/imagecorpus/search/" + query
         }).done(function(data) {
             console.log("Image corpus query returned " + data.split('\n').length + " results");
-            var results = $("#image-search-results");
             results.empty();
             $.each(data.split('\n'), function(idx, filename) {
                 var url = "/imagecorpus/" + filename;
@@ -306,4 +325,6 @@ $(document).ready(function() {
         var target = $(this);
         timer = setTimeout(function() { updateImageSearchResults(target.val()); }, 500);
     });
+
+    $("#selected-image-panel").hide();
 });

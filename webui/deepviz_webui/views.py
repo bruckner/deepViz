@@ -34,6 +34,10 @@ def get_image_corpus():
 def get_image_from_corpus(filename):
     corpus = get_image_corpus()
     image = corpus.get_image(filename)
+    scale = int(request.args.get('scale', 1))
+    if scale != 1:
+        (width, height) = image.size
+        image = image.resize((width * scale, height * scale), Image.NEAREST)
     png_buffer = StringIO()
     image.save(png_buffer, format="PNG")
     png = png_buffer.getvalue()

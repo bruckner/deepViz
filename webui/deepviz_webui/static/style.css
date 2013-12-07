@@ -60,3 +60,17 @@ body {
     width: 100%;
     margin-bottom: 10px;
 }
+
+#imagechooser .btn-group {
+    position: relative;
+    top: -20px;
+}
+
+#image-search-results {
+    max-height: 200px;
+    overflow: auto;
+}
+
+#selected-image-panel div.panel-body {
+    text-align: center;
+}
