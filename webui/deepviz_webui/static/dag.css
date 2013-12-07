@@ -1,9 +1,9 @@
 
-.node.conv {
+.node.active {
   cursor: pointer;
 }
 
-.node.conv text {
+.node.active text {
   fill: blue;
 }
 

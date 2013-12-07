@@ -175,36 +175,61 @@ $(window).resize(function() {
 
 var current_layer = null;
 var current_image = "";
+var dagSVG;
+
+function layerIsSelectable(layerName) {
+    if (layerName.match(/(conv|fc)\d+$/)) {
+        return true;
+    } else if (current_image != "") {
+        return layerName.match(/pool\d+$/) || layerName.match(/(pool|conv)\d+_neuron$/)
+    } else {
+        return false;
+    }
+}
 
 $("#layer-dag").load(function() {
-    var svg = $("#layer-dag")[0].contentDocument,
-        $svg = $(svg.documentElement),
-        css = svg.createElementNS("http://www.w3.org/2000/svg", "style");
+    var svg = $("#layer-dag")[0].contentDocument;
+    dagSVG = $(svg.documentElement);
+    var css = svg.createElementNS("http://www.w3.org/2000/svg", "style");
     css.textContent = "@import url('/static/dag.css')";
-    $svg.append(css);
+    dagSVG.append(css);
 
-    var weightLayers = $svg.find(".node").filter(function() {
-        var name = $(this).find("title").text();
-        return name.match(/(conv|fc)\d+$/);
-    });
-    weightLayers.each(function () { this.classList.add('conv') });
+    updateActiveLayers();
+    var layers = dagSVG.find(".node");
 
-    function selectNode($node) {
-        var name = $node.find("title").text();
-        showFilterForLayer(name);
-        current_layer = name;
-        weightLayers.each(function () { this.classList.remove("selected") });
-        $node.get(0).classList.add("selected");
+    function selectNode(node) {
+        var layerName = node.find("title").text();
+        if (layerIsSelectable(layerName)) {
+            showFilterForLayer(layerName);
+            current_layer = layerName;
+            layers.each(function() {
+                this.classList.remove("selected");
+            });
+            node.get(0).classList.add("selected");
+        }
     }
 
-    weightLayers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
-    selectNode(weightLayers.find(':contains("conv1")').closest("g"));
+    layers.click(function (e) { e.stopPropagation(); selectNode($(this)) });
+    selectNode(layers.find(':contains("conv1")').closest("g"));
 });
 
+function updateActiveLayers() {
+    var layers = dagSVG.find(".node");
+    layers.each(function() {
+        var layerName = $(this).find("title").text();
+        if (layerIsSelectable(layerName)) {
+            this.classList.remove("inactive");
+            this.classList.add("active");
+        } else {
+            this.classList.remove("active");
+            this.classList.add("inactive");
+        }
+    });
+}
 
 function showFilterForLayer(name) {
     var image_name;
-    if (name.match(/conv\d+$/)) {
+    if (name.match(/(conv|pool)\d+$/)) {
         image_name = current_image;
     } else {
         image_name = "";
@@ -248,6 +273,10 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
 /* *********************************** Image Selection ****************************************** */
 
 
+function selectImage(imageName) {
+    updateActiveLayers();
+    showFilterForLayer(current_layer);
+}
 
 $(document).ready(function() {
     var timer = null;
@@ -267,7 +296,7 @@ $(document).ready(function() {
             });
             results.find("img").on("click", function() {
                 current_image = $(this).attr("title");
-                showFilterForLayer(current_layer);
+                selectImage(current_image)
             });
         });
     }
