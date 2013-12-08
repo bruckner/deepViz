@@ -4,7 +4,7 @@ from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visua
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 
-from decaf.util.visualize import show_multiple, show_channels
+from decaf.util.visualize import show_multiple, show_channels, show_single
 
 from flask import render_template, request, Response
 
@@ -124,14 +124,12 @@ def convolved_layer_overview_png(checkpoint, imagename, layername):
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
     classified = model.predict(data=arr, output_blobs=[layername + "_cudanet_out"])
     layer = classified[layername + "_cudanet_out"]
-    # We want to shape this into a (k, k, num_filters) array.
-    # For fully-connected neurons (like fc64_neuron), k may equal 1, so we need to perform
-    # slightly different reshaping:
     if layername.startswith("fc") and layername.endswith("_neuron"):
-        layer = layer.reshape(1, 1, layer.shape[-1])
+        # For fcN, the layer's shape is (1, N).
+        return show_single(layer[0])
     else:
-        layer = layer[0, :, :, :]
-    return show_channels(layer)
+        layer = layer[0, :, :, :]  # shape this into a (k, k, num_filters) array
+        return show_channels(layer)
 
 
 @app.route("/layers/<layername>/overview.svg")

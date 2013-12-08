@@ -256,8 +256,12 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
         if (image_name == "") {
             image = new WeightLayerDisplay(timeline, layer_name, 5);
         } else {
+            var scale = 3;
+            if (layer_name.match(/fc\d+_neuron$/)) {
+                scale = 20;
+            }
             image = new TimelineResponsiveImage(timeline, "/checkpoints/<time>/layers/" +
-                layer_name + "/apply/" + image_name +"/overview.png?scale=3");
+                layer_name + "/apply/" + image_name +"/overview.png?scale=" + scale);
             image.dom.attr("id", "filter-display-" + layer_name + "-" + image_name);
         }
         console.log("Creating filter view for layer " + layer_name + " and image " + image_name);
