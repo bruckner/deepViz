@@ -17,7 +17,7 @@ def parse_range(astr):
     Return a range list given a string.
     e.g. parse_range('1,3,5-12') returns [1, 3, 5, 6, 7, 8, 9, 10, 11, 12]
     """
-    if astr is ALL:
+    if astr is ALL or astr == "*":
         return ALL
     
     result = set()
@@ -92,8 +92,11 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
                 
                 #FIXME
                 shaped_layer = predicted_model["%s_cudanet_out" % l]
+                print shaped_layer.shape
                 shaped_region = shaped_layer[:,:,:,filters[l]]
                 flat_region = flatten_filters(shaped_region, len(filters[l]), 1, shaped_layer.shape[1])
+                #So we know we're getting a 10x32x32 result. We probably want 10 32x32 images.
+
                 
                 #Todo - need to figure out the shape of a prediction and then map that to our output image shape.
             else:
@@ -102,7 +105,9 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
                 #I believe I am somehow abusing numpy's indexing here, but this seems to work.
                 shaped_region = shaped_layer[filters[l],:,:,:][:,:,:,channels[l]]
                 flat_region = flatten_filters(shaped_region, len(filters[l]), len(channels[l]), shaped_layer.shape[1])
-            
+
+
+            print flat_region.shape            
             region[t][l] = flat_region
             
             #This was here when we wanted one image per filter.
@@ -111,22 +116,29 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
             #     for c in channels[l]:
             #         region[t][l][f][c] = select_point(shaped_layer, f, c)
     
-    #Region shoudl be a dict of {time: {layer: image}}
+    #Region should be a dict of {time: {layer: image}}
     return region
     
     
-def select_region_query(model, args):
-    times = parse_range(args.get('times', ALL))
+def select_region_query(model, **kwargs):
+    '''Expects an argument list with some or all of the following:
+        layers: either a single layer name or a comma-separated list of layer names
+        filters: either a single filter number or a comma-separated list of filter numbers, a range:
+                    e.g. "1,3-7,18,22-40"
+        channels: channel numbers in the same format as filters
+        image: an image to apply 
+    '''
+    times = parse_range(kwargs.get('times', ALL))
     
     #Layers are named, so we just take the names.
-    layers = args.get('layers', ALL)
+    layers = kwargs.get('layers', ALL)
     if layers:
         layers = layers.split(",")
         
-    filters = parse_range(args.get('filters', ALL))
-    channels = parse_range(args.get('channels', ALL))
+    filters = parse_range(kwargs.get('filters', ALL))
+    channels = parse_range(kwargs.get('channels', ALL))
     
-    apply_prediction=args.get('image',None)
+    apply_prediction=kwargs.get('image',None)
     
     return select_region(model, times, layers, filters, channels, apply_prediction)
 

@@ -3,6 +3,7 @@ from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
 from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization, \
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
+from deepviz_webui.selectmodels import select_region_query
 
 from decaf.util.visualize import show_multiple, show_channels
 
@@ -115,12 +116,13 @@ def image_to_png(image_data):
     scale = int(request.args.get('scale', 1))
     if scale != 1:
         (width, height) = image.size
+        print image.size
         image = image.resize((width * scale, height * scale), Image.NEAREST)
     png_buffer = StringIO()
     image.save(png_buffer, format="PNG")
     png = png_buffer.getvalue()
     png_buffer.close()
-    return png_buffer
+    return png
     
 def pylabToJsonBase64PNGs(view_func):
     """
@@ -129,7 +131,7 @@ def pylabToJsonBase64PNGs(view_func):
     """
     def _decorator(*args, **kwargs):
         images_data = view_func(*args, **kwargs)
-        transformer = lambda buf: "data:image/png;base64," + base64.urlsafe_b64encode(image_to_png(buf))
+        transformer = lambda buf: "data:image/png;base64,%s" % base64.b64encode(image_to_png(buf)).decode("ascii")
         images_data = mapterminals(transformer, images_data)
                 
         return Response(json.dumps(images_data), mimetype="application/json")
@@ -178,7 +180,7 @@ def layer_overview_svg_container(layername):
 @app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/overview.json")
 @pylabToJsonBase64PNGs
 def layer_filters_channels_overview_json(checkpoints, layernames, filters, channels):
-    region = select_region_query(checkpoints, layernames, filters, channels)
+    region = select_region_query(get_models(), times=checkpoints, layers=layernames, filters=filters, channels=channels)
     images = mapterminals(show_multiple, region)
     #todo need to apply show_multiple to each one of these.
     return images
@@ -187,9 +189,14 @@ def layer_filters_channels_overview_json(checkpoints, layernames, filters, chann
 @app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/apply/<imagename>/overview.json")
 @pylabToJsonBase64PNGs
 def layer_filters_channels_image_json(checkpoints, layernames, filters, channels, imagename):
-    out = select_region_query(checkpoints, layernames, filters, channels, imagename)
+    corpus = get_image_corpus()
+    image = corpus.get_image("%s.png" % imagename)
+    arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
+    
+    out = select_region_query(get_models(), times=checkpoints, layers=layernames, filters=filters, channels=channels, image=arr)
     #todo need to apply show_multiple to each one of these.
-    return out
+    images = mapterminals(show_multiple, out)
+    return images
 
 
 @app.route("/layers.svg")
