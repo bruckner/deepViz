@@ -123,7 +123,14 @@ def convolved_layer_overview_png(checkpoint, imagename, layername):
     model = get_models()[checkpoint]
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
     classified = model.predict(data=arr, output_blobs=[layername + "_cudanet_out"])
-    layer = classified[layername + "_cudanet_out"][0, :, :, :]
+    layer = classified[layername + "_cudanet_out"]
+    # We want to shape this into a (k, k, num_filters) array.
+    # For fully-connected neurons (like fc64_neuron), k may equal 1, so we need to perform
+    # slightly different reshaping:
+    if layername.startswith("fc") and layername.endswith("_neuron"):
+        layer = layer.reshape(1, 1, layer.shape[-1])
+    else:
+        layer = layer[0, :, :, :]
     return show_channels(layer)
 
 

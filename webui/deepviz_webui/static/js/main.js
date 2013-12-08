@@ -181,7 +181,7 @@ function layerIsSelectable(layerName) {
     if (layerName.match(/(conv|fc)\d+$/)) {
         return true;
     } else if (current_image != "") {
-        return layerName.match(/pool\d+$/) || layerName.match(/(pool|conv)\d+_neuron$/)
+        return layerName.match(/pool\d+$/) || layerName.match(/(pool|conv|fc)\d+_neuron$/)
     } else {
         return false;
     }
@@ -229,7 +229,7 @@ function updateActiveLayers() {
 
 function showFilterForLayer(name) {
     var image_name;
-    if (name.match(/(conv|pool)\d+$/)) {
+    if (name.match(/(conv|pool)\d+$/) || name.match(/(pool|conv|fc)\d+_neuron$/)) {
         image_name = current_image;
     } else {
         image_name = "";
