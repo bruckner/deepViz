@@ -46,7 +46,7 @@ def pylabToJsonBase64PNGs(view_func):
     """
     def _decorator(*args, **kwargs):
         images_data = view_func(*args, **kwargs)
-        transformer = lambda buf: "data:image/png;base64,%s" % base64.b64encode(image_to_png(buf)).decode("ascii")
+        transformer = lambda buf: "data:image/png;base64,%s" % base64.b64encode(_image_to_png(buf)).decode("ascii")
         images_data = mapterminals(transformer, images_data)
 
         return Response(json.dumps(images_data), mimetype="application/json")
