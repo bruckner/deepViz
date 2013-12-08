@@ -281,14 +281,38 @@ function selectImage(imageName) {
     if (imageName == "") {
         $("#selected-image-panel").hide();
         $("#clear-image-button").addClass("disabled");
+        $("#image-probability-table").empty();
     } else {
         $("#clear-image-button").removeClass("disabled");
         $("#selected-image").attr("src", "/imagecorpus/" + imageName + ".png?scale=4");
         $("#selected-image-panel").show();
     }
     updateActiveLayers();
+    updateImageProbs(timeline.currentPosition() - 1);
     showFilterForLayer(current_layer);
 }
+
+
+function updateImageProbs(time) {
+    if (current_image == "") {
+        return;
+    }
+    $.ajax({
+        url: "/checkpoints/" + time + "/predict/" + current_image,
+        dataType: "json"
+    }).done(function(probabilities) {
+        var table = $("#image-probability-table");
+        table.empty();
+        for (var className in probabilities) {
+            table.append(
+                $("<tr>")
+                    .append($("<td>").text(className))
+                    .append($("<td>").text(probabilities[className])));
+        }
+    });
+}
+timeline.registerCallback(updateImageProbs);
+
 
 $("#clear-image-button").click(function() {
     if (current_image != "") {
@@ -308,11 +332,12 @@ $(document).ready(function() {
             return;
         }
         $.ajax({
-            url: "/imagecorpus/search/" + query
-        }).done(function(data) {
-            console.log("Image corpus query returned " + data.split('\n').length + " results");
+            url: "/imagecorpus/search/" + query,
+            dataType: "json"
+        }).done(function(searchResults) {
+            console.log("Image corpus query returned " + searchResults.length + " results");
             results.empty();
-            $.each(data.split('\n'), function(idx, filename) {
+            $.each(searchResults, function(index, filename) {
                 var url = "/imagecorpus/" + filename;
                 var img = $("<img>").attr("src", url).attr("title", filename.slice(0, -4));
                 results.append(img);
