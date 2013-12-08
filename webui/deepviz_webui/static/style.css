@@ -27,9 +27,10 @@ body {
 #sidebar-inner {
     padding: 5px;
     font-size: 12px;
+    overflow: auto;
 }
 
-#main-contentarea-inner, #sidebar-inner {
+#main-contentarea-inner {
     overflow: auto;
 }
 
@@ -43,16 +44,23 @@ body {
   overflow: hidden;
 }
 
-.filter-display object, .filter-display img {
-    position: absolute;
+#filter-display {
+    position: relative;
 }
 
 .filter-display object {
+    position: absolute;
     z-index: 3;
 }
 
 .filter-display img {
+    position: absolute;
     z-index: 2;
+}
+
+.hide-offscreen {
+    position: absolute;
+    top: -99999990px;
 }
 
 

@@ -54,8 +54,12 @@ function WeightLayerDisplay (timeline, layer_name, scale) {
             layer_name + "/overview.png?scale=" + scale);
     this.dom.append(img.dom);
     this.refresh = function(time) { img.refresh(time) };
-    // Mouseover handlers for the filters:
     obj.load(function() {
+        // Because the SVG and image are absolutely positioned, we need to
+        // use Javascript to set their parent element's dimensons so that the
+        // content area scrolls properly; see http://stackoverflow.com/questions/7321281
+        obj.parent().height(obj.height());
+        obj.parent().width(obj.width());
         var svg = $(obj[0].contentDocument.documentElement);
         var filterInfo = $("#selected-filter-number");
         svg.find("rect").on("mouseover", function() {
@@ -236,8 +240,8 @@ function showFilterForLayer(name) {
     }
     // Hide images by positioning them offscreen.  Avoids a reload that occurs
     // when <object> display style changes.
-    filterDisplay.find('.filter-display').css('position', 'relative').css('left', 100000);
-    getOrElseCreateWeightLayerDisplay(name, image_name).css('position', 'initial');
+    filterDisplay.find('.filter-display').addClass("hide-offscreen");
+    getOrElseCreateWeightLayerDisplay(name, image_name).removeClass("hide-offscreen");
 }
 
 /* ************************************ Filter Display ****************************************** */
@@ -266,7 +270,6 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
         }
         console.log("Creating filter view for layer " + layer_name + " and image " + image_name);
         image.refresh(timeline.currentPosition() - 1);
-        image.dom.css('position', 'relative').css('left', 100000);
         image.dom.addClass("filter-display");
         filterDisplay.append(image.dom);
         return image.dom;
