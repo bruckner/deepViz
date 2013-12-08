@@ -5,13 +5,14 @@ from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visua
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 from deepviz_webui.selectmodels import select_region_query
 
-from decaf.util.visualize import show_multiple, show_channels
+from decaf.util.visualize import show_multiple, show_channels, show_single
 
-from flask import render_template, request, Response
+from flask import render_template, request, Response, jsonify
 
 from cStringIO import StringIO
 from functools import wraps
 from gpumodel import IGPUModel
+import json
 from matplotlib import pyplot, cm
 import networkx as nx
 import numpy as np
@@ -47,6 +48,10 @@ def get_image_corpus():
 def get_image_from_corpus(filename):
     corpus = get_image_corpus()
     image = corpus.get_image(filename)
+    scale = int(request.args.get('scale', 1))
+    if scale != 1:
+        (width, height) = image.size
+        image = image.resize((width * scale, height * scale), Image.NEAREST)
     png_buffer = StringIO()
     image.save(png_buffer, format="PNG")
     png = png_buffer.getvalue()
@@ -57,9 +62,8 @@ def get_image_from_corpus(filename):
 @app.route("/imagecorpus/search/<query>")
 def image_corpus_query(query):
     corpus = get_image_corpus()
-    image_names = list(corpus.find_images(query))
-    return Response("\n".join(image_names), mimetype="text/plain")
-
+    results = list(corpus.find_images(query))
+    return Response(json.dumps(results), mimetype="application/json")
 
 
 def get_models():
@@ -69,7 +73,6 @@ def get_models():
         checkpoints = sorted(os.listdir(model_path))
         _models = [load_from_convnet(os.path.join(model_path, c)) for c in checkpoints]
     return _models
-
 
 
 # TODO: remove this once the graph is drawn from Decaf:
@@ -150,6 +153,15 @@ def layer_overview_png(checkpoint, layername):
     return show_multiple(normalize(reshaped), ncols=ncols)
 
 
+def run_model_on_corpus_image(checkpoint, imagename, output_blobs):
+    # This is based on decaf's "imagenet" script:
+    corpus = get_image_corpus()
+    image = corpus.get_image(imagename + ".png")
+    model = get_models()[checkpoint]
+    arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
+    return model.predict(data=arr, output_blobs=output_blobs)
+
+
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/apply/<imagename>/overview.png")
 @pylabToPNG
 def convolved_layer_overview_png(checkpoint, imagename, layername):
@@ -157,13 +169,27 @@ def convolved_layer_overview_png(checkpoint, imagename, layername):
     Visualizes the applications of a layer's filters to an image.
     """
     # This is based on decaf's "imagenet" script:
+    classified = run_model_on_corpus_image(checkpoint, imagename, [layername + "_cudanet_out"])
+    layer = classified[layername + "_cudanet_out"]
+    if layername.startswith("fc") and layername.endswith("_neuron"):
+        # For fcN, the layer's shape is (1, N).
+        return show_single(layer[0])
+    else:
+        layer = layer[0, :, :, :]  # shape this into a (k, k, num_filters) array
+        return show_channels(layer)
+
+
+@app.route("/checkpoints/<int:checkpoint>/predict/<imagename>")
+@cached()
+def predict_for_image(checkpoint, imagename):
+    """
+    Return predictions for a particular image.
+    """
+    features = run_model_on_corpus_image(checkpoint, imagename, ["probs_cudanet_out"])
+    class_number_probs = enumerate(features["probs_cudanet_out"][0])
     corpus = get_image_corpus()
-    image = corpus.get_image(imagename + ".png")
-    model = get_models()[checkpoint]
-    arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
-    classified = model.predict(data=arr, output_blobs=[layername + "_cudanet_out"])
-    layer = classified[layername + "_cudanet_out"][0, :, :, :]
-    return show_channels(layer)
+    class_label_probs = [(corpus.label_names[l], float(p)) for (l, p) in class_number_probs]
+    return Response(json.dumps(dict(class_label_probs)), mimetype="application/json")
 
 
 @app.route("/layers/<layername>/overview.svg")

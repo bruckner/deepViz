@@ -14,6 +14,7 @@
 
     <div id="sidebar-outer" class="col-xs-3">
         <div id="sidebar-inner">
+
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Filter Info</h3>
@@ -22,16 +23,33 @@
                     <p><b>Selected filter: </b><span id="selected-filter-number">None</span></p>
                 </div>
             </div>
+
             <div class="panel panel-default" id="imagechooser">
                 <div class="panel-heading">
                     <h3 class="panel-title">Training Images</h3>
+                    <div class="btn-group pull-right">
+                        <button id="clear-image-button" type="button" class="btn btn-default btn-xs disabled">
+                            <span class="glyphicon glyphicon-remove"> </span> Clear Selection
+                        </button>
+                    </div>
                 </div>
                 <div class="panel-body">
                     <input id="image-search-input" placeholder="Search Image Corpus">
-                    <ul id="image-search-results">
-                    </ul>
+                    <div id="image-search-results"></div>
                 </div>
             </div>
+
+            <div class="panel panel-default" id="selected-image-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Selected Image</h3>
+                </div>
+                <div class="panel-body">
+                    <img id="selected-image">
+                </div>
+                <table class="table table-condensed" id="image-probability-table">
+                </table>
+            </div>
+
         </div>
     </div>
 
@@ -54,18 +72,7 @@
     </div>
 
     <div class="navbar navbar-default navbar-fixed-bottom" id="footer" role="navigation">
-        <div id="timeline">
-            <a href="#" type="button" class="btn btn-default btn-sm" id="timeline-button">
-                <span class="glyphicon glyphicon-play"></span>
-            </a>
-            <input type="range"
-                   min="1"
-                   max="{{ num_timesteps }}"
-                   step="1"
-                   value="1"
-                   id="timeline-slider">
-            <span class="badge"><span id="timeline-position">1</span>/{{ num_timesteps }}</span>
-        </div>
+        <span class="hidden" id="num-timesteps">{{ num_timesteps }}</span>
     </div>
     <script src="static/js/main.js" charset="utf-8"></script>
 {% endblock %}
