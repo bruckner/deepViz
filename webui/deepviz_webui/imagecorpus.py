@@ -47,5 +47,9 @@ class CIFAR10ImageCorpus(object):
         rgb_data = np.rot90(np.reshape(data, (ksize, ksize, 3), 'F'), 3)
         return Image.fromarray(rgb_data)
 
+    def get_all_images_data(self):
+        ksize = sqrt(len(self._image_data[0]) / 3)
+        return np.reshape(self._image_data, (self._image_data.shape[0], ksize, ksize, 3), 'F')
+
     def get_class(self, filename):
         return self.label_names[self._image_labels[self.filenames[filename]]]
