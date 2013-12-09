@@ -22,7 +22,20 @@ import argparse
 import cPickle as pickle
 from itertools import izip
 import numpy as np
+from multiprocessing import Pool
 import time
+
+
+_shared_data = None
+
+
+def _process_model(x):
+    (timestep, model_filename) = x
+    (directory, image_data, image_classes, num_classes) = _shared_data
+    _log.info("Processing model for timestep %i" % timestep)
+    model = load_from_convnet(model_filename)
+    stats = ModelStats.create(model, image_data, image_classes, num_classes)
+    stats.save(os.path.join(directory, str(timestep)))
 
 
 class ModelStatsDB(object):
@@ -43,11 +56,15 @@ class ModelStatsDB(object):
         return self._stats[timestep]
 
     @classmethod
-    def create(cls, directory, models, image_data, image_classes, num_classes):
-        for (timestep, model) in enumerate(models):
-            _log.info("Processing model for timestep %i" % timestep)
-            stats = ModelStats.create(model, image_data, image_classes, num_classes)
-            stats.save(os.path.join(directory, str(timestep)))
+    def create(cls, directory, model_filenames, image_data, image_classes, num_classes):
+        """
+        Warning: this `create` method is not threadsafe!
+        """
+        global _shared_data
+        _shared_data = (directory, image_data, image_classes, num_classes)
+        pool = Pool(4)  # TODO: make pool size configurable
+        pool.map(_process_model, enumerate(model_filenames), 1)
+        _shared_data = None
         return ModelStatsDB(directory)
 
 
@@ -114,7 +131,7 @@ if __name__ == "__main__":
         raise ArgumentError("Output path '%s' does not exist!" % args.output_dir)
 
     checkpoints = sorted(os.listdir(args.model))
-    models = (load_from_convnet(os.path.join(args.model, str(c))) for c in checkpoints)
+    model_filenames = (os.path.join(args.model, str(c)) for c in checkpoints)
     corpus = CIFAR10ImageCorpus(args.cifar)
-    ModelStatsDB.create(args.output_dir, models, corpus.get_all_images_data(),
+    ModelStatsDB.create(args.output_dir, model_filenames, corpus.get_all_images_data(),
                         corpus._image_labels, args.num_classes)
