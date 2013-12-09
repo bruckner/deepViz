@@ -14,12 +14,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../scripts"))
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, required=True)
 parser.add_argument("--cifar", type=str, required=True)
+parser.add_argument("--model-stats", type=str, required=True)
 args = parser.parse_args()
 
-from deepviz_webui import app
+from deepviz_webui.app import app
 
 app.config["TRAINED_MODEL_PATH"] = args.model
 app.config["CIFAR_10_PATH"] = args.cifar
+app.config["MODEL_STATS_DATABASES"] = args.model_stats
 app.debug = True
 
 http_server = HTTPServer(WSGIContainer(app))

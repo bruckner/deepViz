@@ -1,4 +1,4 @@
-from deepviz_webui import app, cached
+from deepviz_webui.app import app, cached
 from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
 from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization, \
     get_layer_dimensions
