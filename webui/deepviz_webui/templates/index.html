@@ -5,74 +5,81 @@
 {% block content %}
 
 
-    <div class="navbar navbar-default navbar-fixed-top" id="header">
-        <h1>Deep Viz</h1>
-    </div>
-
-
-    <div class="row">
-
-    <div id="sidebar-outer" class="col-xs-3">
-        <div id="sidebar-inner">
-
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Filter Info</h3>
-                </div>
-                <div class="panel-body">
-                    <p><b>Selected filter: </b><span id="selected-filter-number">None</span></p>
-                </div>
-            </div>
-
-            <div class="panel panel-default" id="imagechooser">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Training Images</h3>
-                    <div class="btn-group pull-right">
-                        <button id="clear-image-button" type="button" class="btn btn-default btn-xs disabled">
-                            <span class="glyphicon glyphicon-remove"> </span> Clear Selection
-                        </button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <input id="image-search-input" placeholder="Search Image Corpus">
-                    <div id="image-search-results"></div>
-                </div>
-            </div>
-
-            <div class="panel panel-default" id="selected-image-panel">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Selected Image</h3>
-                </div>
-                <div class="panel-body">
-                    <img id="selected-image">
-                </div>
-                <table class="table table-condensed" id="image-probability-table">
-                </table>
-            </div>
-
+    <div class="navbar navbar-default navbar-fixed-top navbar-inverse" id="header">
+        <div class="navbar-header">
+            <a class="navbar-brand">Deep Viz</a>
         </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#filters-tab" data-toggle="tab">Filters</a></li>
+            <li><a href="#confusion-matrix-tab" data-toggle="tab">Confusion Matrix</a></li>
+        </ul>
     </div>
 
-    <div id="main-contentarea-outer" class="col-xs-9">
-        <div style="clear:left;" id="main-contentarea-inner">
-            <div>
-                <div role="main" id="detailed-view">
-                    <div id="layer-graph">
-                        <object type="image/svg+xml" data="/layers.svg" id="layer-dag" width="100%" height="150px">
-                            Your browser does not support SVG
-                        </object>
+
+    <div class="row tab-content">
+        <div class="tab-pane active" id="filters-tab">
+            <div id="sidebar-outer" class="col-xs-3">
+                <div id="sidebar-inner">
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Filter Info</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p><b>Selected filter: </b><span id="selected-filter-number">None</span></p>
+                        </div>
                     </div>
-                    <div id="multi-filter-display">
-                        <table id="multi-filter-table">
+
+                    <div class="panel panel-default" id="imagechooser">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Training Images</h3>
+                            <div class="btn-group pull-right">
+                                <button id="clear-image-button" type="button" class="btn btn-default btn-xs disabled">
+                                    <span class="glyphicon glyphicon-remove"> </span> Clear Selection
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <input id="image-search-input" placeholder="Search Image Corpus">
+                            <div id="image-search-results"></div>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default" id="selected-image-panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Selected Image</h3>
+                        </div>
+                        <div class="panel-body">
+                            <img id="selected-image">
+                        </div>
+                        <table class="table table-condensed" id="image-probability-table">
                         </table>
                     </div>
-                    <div id="filter-display">
+
+                </div>
+            </div>
+
+            <div id="main-contentarea-outer" class="col-xs-9">
+                <div style="clear:left;" id="main-contentarea-inner">
+                    <div>
+                        <div role="main" id="detailed-view">
+                            <div id="layer-graph">
+                                <object type="image/svg+xml" data="/layers.svg" id="layer-dag" width="100%" height="150px">
+                                    Your browser does not support SVG
+                                </object>
+                            </div>
+                            <div id="multi-filter-display">
+                                <table id="multi-filter-table">
+                                </table>
+                            </div>
+                            <div id="filter-display">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
+        <div class="tab-pane" id="confusion-matrix-tab"></div>
     </div>
 
     <div class="navbar navbar-default navbar-fixed-bottom" id="footer" role="navigation">
