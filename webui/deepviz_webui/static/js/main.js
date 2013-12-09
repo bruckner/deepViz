@@ -357,3 +357,40 @@ $(document).ready(function() {
 
     $("#selected-image-panel").hide();
 });
+
+
+/* *************************** Multiple Image Display ******************************************* */
+
+var current_times = "";
+var current_layers = "";
+var current_filters = "";
+var current_channels = "";
+
+function displaySubsetFilters(times, layers, filters, channels, scale) {
+    
+    if (current_image == "") {
+        //return;
+        current_image = "monoplane_s_001543";
+    }
+    $.ajax({
+        url: "/checkpoints/" + times + "/layers/" + layers + "/filters/" + filters + "/channels/" + channels + "/overview.json?scale=" + scale,
+        dataType: "json"
+    }).done(function(image_obj) {
+        var table = $("#multi-filter-table");
+        table.empty();
+        this.dom=$("<div>");
+        for (var t in image_obj) {
+            var row = $("<tr>")
+            for (var l in image_obj[t]) {
+                var img = $("<img>").attr('src', image_obj[t][l]);
+                row.append($("<td>").append(img));
+            }
+            table.append(row);
+        }
+    });
+}
+
+// Uncomment this to see a handful of images.
+// $(document).ready(function() {
+//    displaySubsetFilters("18-20", "conv1,conv2,conv3", "1-20", "1-3", 5);
+// });
