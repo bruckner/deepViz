@@ -57,8 +57,9 @@ class ModelStats(object):
     to an image corpus.
     """
 
-    def __init__(self, confusion_matrix):
+    def __init__(self, confusion_matrix, images_by_classification):
         self._confusion_matrix = confusion_matrix
+        self._images_by_classification = images_by_classification
 
     @property
     def confusion_matrix(self):
@@ -67,6 +68,14 @@ class ModelStats(object):
         of images of true class `i` that were classified as class `j`.
         """
         return self._confusion_matrix
+
+    @property
+    def images_by_classification(self):
+        """
+        Returns a matrix of lists, where entry `A[i, j]` gives the ids
+        of images of true class `i` that were classified as class `j`.
+        """
+        return self._images_by_classification
 
     @classmethod
     def load(cls, filename):
@@ -89,15 +98,19 @@ class ModelStats(object):
         BATCH_SIZE = 1000
         image_data = image_data.astype(np.float32)
         confusion_matrix = np.zeros((num_classes, num_classes))
+        images_by_classification = [[[] for _ in xrange(num_classes)] for _ in xrange(num_classes)]
+
         for chunk_start in xrange(0, len(image_data), BATCH_SIZE):
             images = image_data[chunk_start:chunk_start + BATCH_SIZE]
-            true_classes = image_classes[chunk_start:chunk_start + BATCH_SIZE]
             start_time = time.time()
             outputs = model.predict(data=images, output_blobs=["probs_cudanet_out"])
             end_time = time.time()
             _log.info("Processed batch of %i images in %f seconds" %
                      (len(images), end_time - start_time))
-            predicted_classes = (np.argmax(x) for x in outputs["probs_cudanet_out"])
-            for (true_class, predicted_class) in izip(true_classes, predicted_classes):
+            for (offset, image_probs) in enumerate(outputs["probs_cudanet_out"]):
+                image_num = chunk_start + offset
+                true_class = image_classes[image_num]
+                predicted_class = np.argmax(image_probs)
                 confusion_matrix[true_class][predicted_class] += 1
-        return ModelStats(confusion_matrix)
+                images_by_classification.append(image_num)
+        return ModelStats(confusion_matrix, images_by_classification)

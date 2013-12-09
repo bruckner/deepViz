@@ -1,5 +1,6 @@
 from deepviz_webui.app import app, cached
-from deepviz_webui.globalresources import get_image_corpus, get_model, get_models
+from deepviz_webui.globalresources import get_image_corpus, get_model, \
+    get_models, get_model_stats_db
 from deepviz_webui.utils.decaf import reshape_layer_for_visualization, \
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
@@ -12,16 +13,15 @@ from decaf.util.visualize import show_multiple, show_channels, show_single
 from flask import render_template, request, Response, jsonify
 
 from cStringIO import StringIO
-import json
 import networkx as nx
 import numpy as np
 from PIL import Image
 
 
-@app.route("/imagecorpus/<filename>")
-def get_image_from_corpus(filename):
+@app.route("/imagecorpus/<int:image_num>.png")
+def get_image_from_corpus(image_num):
     corpus = get_image_corpus()
-    image = corpus.get_image(filename)
+    image = corpus.get_image(image_num)
     scale = int(request.args.get('scale', 1))
     if scale != 1:
         (width, height) = image.size
@@ -36,10 +36,17 @@ def get_image_from_corpus(filename):
 @app.route("/imagecorpus/search/<query>")
 def image_corpus_query(query):
     corpus = get_image_corpus()
-    results = list(corpus.find_images(query))
-    return Response(json.dumps(results), mimetype="application/json")
+    # TODO: limit the number of search results, or paginate them.
+    results = dict(corpus.find_images(query))
+    return jsonify(results)
 
 
+@app.route("/checkpoints/<int:checkpoint>/confusionmatrix")
+def confusion_matrix(checkpoint):
+    confusion_matrix = get_model_stats_db().get_stats(checkpoint).confusion_matrix
+    json_matrix = list(list(float(y) for y in x) for x in confusion_matrix)
+    label_names = get_image_corpus().label_names
+    return jsonify({'confusionmatrix': json_matrix, 'labelnames': label_names})
 
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
@@ -53,23 +60,23 @@ def layer_overview_png(checkpoint, layername):
     return show_multiple(normalize(reshaped), ncols=ncols)
 
 
-def run_model_on_corpus_image(checkpoint, imagename, output_blobs):
+def run_model_on_corpus_image(checkpoint, imagenum, output_blobs):
     # This is based on decaf's "imagenet" script:
     corpus = get_image_corpus()
-    image = corpus.get_image(imagename + ".png")
+    image = corpus.get_image(imagenum)
     model = get_models()[checkpoint]
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
     return model.predict(data=arr, output_blobs=output_blobs)
 
 
-@app.route("/checkpoints/<int:checkpoint>/layers/<layername>/apply/<imagename>/overview.png")
+@app.route("/checkpoints/<int:checkpoint>/layers/<layername>/apply/<int:imagenum>/overview.png")
 @pylabToPNG
-def convolved_layer_overview_png(checkpoint, imagename, layername):
+def convolved_layer_overview_png(checkpoint, imagenum, layername):
     """
     Visualizes the applications of a layer's filters to an image.
     """
     # This is based on decaf's "imagenet" script:
-    classified = run_model_on_corpus_image(checkpoint, imagename, [layername + "_cudanet_out"])
+    classified = run_model_on_corpus_image(checkpoint, imagenum, [layername + "_cudanet_out"])
     layer = classified[layername + "_cudanet_out"]
     if layername.startswith("fc") and layername.endswith("_neuron"):
         # For fcN, the layer's shape is (1, N).
@@ -79,17 +86,17 @@ def convolved_layer_overview_png(checkpoint, imagename, layername):
         return show_channels(layer)
 
 
-@app.route("/checkpoints/<int:checkpoint>/predict/<imagename>")
+@app.route("/checkpoints/<int:checkpoint>/predict/<int:imagenum>")
 @cached()
-def predict_for_image(checkpoint, imagename):
+def predict_for_image(checkpoint, imagenum):
     """
     Return predictions for a particular image.
     """
-    features = run_model_on_corpus_image(checkpoint, imagename, ["probs_cudanet_out"])
+    features = run_model_on_corpus_image(checkpoint, imagenum, ["probs_cudanet_out"])
     class_number_probs = enumerate(features["probs_cudanet_out"][0])
     corpus = get_image_corpus()
     class_label_probs = [(corpus.label_names[l], float(p)) for (l, p) in class_number_probs]
-    return Response(json.dumps(dict(class_label_probs)), mimetype="application/json")
+    return jsonify(dict(class_label_probs))
 
 
 @app.route("/layers/<layername>/overview.svg")
@@ -116,11 +123,11 @@ def layer_filters_channels_overview_json(checkpoints, layernames, filters, chann
     return images
     
     
-@app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/apply/<imagename>/overview.json")
+@app.route("/checkpoints/<checkpoints>/layers/<layernames>/filters/<filters>/channels/<channels>/apply/<int:imagenum>/overview.json")
 @pylabToJsonBase64PNGs
-def layer_filters_channels_image_json(checkpoints, layernames, filters, channels, imagename):
+def layer_filters_channels_image_json(checkpoints, layernames, filters, channels, imagenum):
     corpus = get_image_corpus()
-    image = corpus.get_image("%s.png" % imagename)
+    image = corpus.get_image(imagenum)
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
     
     out = select_region_query(get_models(), times=checkpoints, layers=layernames, filters=filters, channels=channels, image=arr)

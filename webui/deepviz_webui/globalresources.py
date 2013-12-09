@@ -48,7 +48,7 @@ def get_model():
 
 
 def get_model_stats_db():
-     global _model_stats_db
-     if _model_stats_db is None:
-         _model_stats_db = ModelStatsDB(app.config["MODEL_STATS_DB"])
-     return _model_stats_db
+    global _model_stats_db
+    if _model_stats_db is None:
+        _model_stats_db = ModelStatsDB(app.config["MODEL_STATS_DB"])
+    return _model_stats_db

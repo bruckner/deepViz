@@ -4,6 +4,9 @@ var numFrames = parseInt($("#num-timesteps").text());
 var timeline = new TimelineControl(numFrames, 1000);
 $(document).ready(function() {
     $("#footer").append(timeline.dom);
+    var confusionMatrix = new ConfusionMatrix(timeline);
+    $("#confusionmatrix").append(confusionMatrix.dom);
+    timeline.seekToPosition(1);
 });
 
 /* *************************** UI Elements / Controls ******************************************* */
@@ -165,6 +168,49 @@ function TimelineControl(numFrames, millisPerFrame) {
         time_change_callbacks.fire(newPosition - 1);
     };
 }
+
+function ConfusionMatrix(timeline) {
+    var table = $("<table>").addClass("table table-bordered table-condensed");
+    table.append($("<thead>").append($("<tr>").append($("<td>"))));
+    table.append($("<tbody>"));
+    this.dom = table;
+    this.refresh = function(time) {
+        $.ajax({
+            url: "/checkpoints/" + time + "/confusionmatrix",
+            dataType: "json"
+        }).done(function(result) {
+            var matrix = result['confusionmatrix'];
+            var min = d3.min(matrix, function(x) { return d3.min(x) });
+            var max = d3.max(matrix, function(x) { return d3.max(x) });
+            var scale = d3.scale.linear()
+                .domain([min, max])
+                .range([255, 128]);
+            var tab = d3.select(table[0]);
+            tab.select("thead tr")
+                .selectAll("th")
+                .data(result['labelnames'])
+                .enter()
+                .append("th")
+                .text(function(x) { return x; });
+            var rows = tab.select("tbody")
+                .selectAll("tr")
+                .data(matrix);
+            rows.enter()
+                .append("tr")
+                .append("th")
+                .text(function(x, i) { return result['labelnames'][i]; });
+            var cols = rows.selectAll("td")
+                .data(function(row) { return row; });
+            cols.enter()
+                .append("td");
+            cols.transition().text(function(x) { return x; })
+                .style("background-color", function(x) { return d3.rgb(scale(x), scale(x), scale(x)) });
+        });
+    };
+    var outerThis = this;
+    timeline.registerCallback(function(time) { outerThis.refresh(time); });
+}
+
 
 /* ***************************** Window Scaling ************************************************* */
 
@@ -340,13 +386,14 @@ $(document).ready(function() {
         }).done(function(searchResults) {
             console.log("Image corpus query returned " + searchResults.length + " results");
             results.empty();
-            $.each(searchResults, function(index, filename) {
-                var url = "/imagecorpus/" + filename;
+            for (var filename in searchResults) {
+                var url = "/imagecorpus/" + searchResults[filename] + ".png";
                 var img = $("<img>").attr("src", url).attr("title", filename.slice(0, -4));
+                img.data("imagenum", searchResults[filename]);
                 results.append(img);
-            });
+            }
             results.find("img").on("click", function() {
-                current_image = $(this).attr("title");
+                current_image = $(this).data("imagenum");
                 selectImage(current_image)
             });
         });

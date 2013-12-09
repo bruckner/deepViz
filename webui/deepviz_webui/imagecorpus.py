@@ -17,7 +17,7 @@ class CIFAR10ImageCorpus(object):
         batches = sorted(os.listdir(root_folder))[1:]  # Skip batches.meta.
         self._image_data = None
         self._image_labels = None
-        self.filenames = {}
+        self._filenames = None
         for batch in batches:
             with open(os.path.join(root_folder, batch)) as batchfile:
                 data = cPickle.load(batchfile)
@@ -26,23 +26,23 @@ class CIFAR10ImageCorpus(object):
                     offset = 0
                     self._image_data = data['data'].T  # colmajor version
                     self._image_labels = data['labels']
+                    self._filenames = data["filenames"]
                 else:
                     offset = self._image_data.shape[0]
                     self._image_data = np.concatenate((self._image_data, data['data'].T))
                     self._image_labels.extend(data['labels'])
-                for (counter, filename) in enumerate(data['filenames']):
-                    self.filenames[filename] = offset + counter
+                    self._filenames.extend(data["filenames"])
 
     def find_images(self, query):
         """
         Return the names of images that match a query
         """
-        for image_name in self.filenames.keys():
+        for (image_num, image_name) in enumerate(self._filenames):
             if query in image_name:
-                yield image_name
+                yield (image_name, image_num)
 
-    def get_image(self, filename):
-        data = self._image_data[self.filenames[filename]]
+    def get_image(self, image_num):
+        data = self._image_data[image_num]
         ksize = sqrt(len(data) / 3)
         rgb_data = np.rot90(np.reshape(data, (ksize, ksize, 3), 'F'), 3)
         return Image.fromarray(rgb_data)
@@ -50,6 +50,3 @@ class CIFAR10ImageCorpus(object):
     def get_all_images_data(self):
         ksize = sqrt(len(self._image_data[0]) / 3)
         return np.reshape(self._image_data, (self._image_data.shape[0], ksize, ksize, 3), 'F')
-
-    def get_class(self, filename):
-        return self.label_names[self._image_labels[self.filenames[filename]]]
