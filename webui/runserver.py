@@ -21,7 +21,7 @@ from deepviz_webui.app import app
 
 app.config["TRAINED_MODEL_PATH"] = args.model
 app.config["CIFAR_10_PATH"] = args.cifar
-app.config["MODEL_STATS_DATABASES"] = args.model_stats
+app.config["MODEL_STATS_DB"] = args.model_stats
 app.debug = True
 
 http_server = HTTPServer(WSGIContainer(app))

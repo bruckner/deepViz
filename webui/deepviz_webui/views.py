@@ -1,6 +1,6 @@
 from deepviz_webui.app import app, cached
-from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
-from deepviz_webui.utils.decaf import load_from_convnet, reshape_layer_for_visualization, \
+from deepviz_webui.globalresources import get_image_corpus, get_model, get_models
+from deepviz_webui.utils.decaf import reshape_layer_for_visualization, \
     get_layer_dimensions
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 from deepviz_webui.utils.misc import mapterminals
@@ -12,24 +12,10 @@ from decaf.util.visualize import show_multiple, show_channels, show_single
 from flask import render_template, request, Response, jsonify
 
 from cStringIO import StringIO
-from gpumodel import IGPUModel
 import json
 import networkx as nx
 import numpy as np
 from PIL import Image
-from shownet import ShowConvNet
-import os
-
-_models = None
-_model = None  # TODO: remove this once the graph is drawn from Decaf
-_image_corpus = None
-
-
-def get_image_corpus():
-    global _image_corpus
-    if _image_corpus is None:
-        _image_corpus = CIFAR10ImageCorpus(app.config["CIFAR_10_PATH"])
-    return _image_corpus
 
 
 @app.route("/imagecorpus/<filename>")
@@ -54,27 +40,6 @@ def image_corpus_query(query):
     return Response(json.dumps(results), mimetype="application/json")
 
 
-def get_models():
-    global _models
-    if _models is None:
-        model_path = app.config["TRAINED_MODEL_PATH"]
-        checkpoints = sorted(os.listdir(model_path))
-        _models = [load_from_convnet(os.path.join(model_path, c)) for c in checkpoints]
-    return _models
-
-
-# TODO: remove this once the graph is drawn from Decaf:
-def get_model():
-    global _model
-    if _model is None:
-        # This code is adapted from gpumodel.py and shownet.py
-        load_dic = IGPUModel.load_checkpoint(app.config["TRAINED_MODEL_PATH"])
-        op = ShowConvNet.get_options_parser()
-        old_op = load_dic["op"]
-        old_op.merge_from(op)
-        op = old_op
-        _model = ShowConvNet(op, load_dic)
-    return _model
 
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
@@ -129,6 +94,10 @@ def predict_for_image(checkpoint, imagename):
 
 @app.route("/layers/<layername>/overview.svg")
 def layer_overview_svg_container(layername):
+    """
+    Generates transparent SVGs that are overlaid on filter views
+    to enable mouse interactions.
+    """
     model = get_models()[0]
     layer = model.layers[layername]
     (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
