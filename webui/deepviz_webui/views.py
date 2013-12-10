@@ -100,8 +100,8 @@ def predict_for_image(checkpoint, imagenum):
     features = run_model_on_corpus_image(checkpoint, imagenum, ["probs_cudanet_out"])
     class_number_probs = enumerate(features["probs_cudanet_out"][0])
     corpus = get_image_corpus()
-    class_label_probs = [(corpus.label_names[l], float(p)) for (l, p) in class_number_probs]
-    return jsonify(dict(class_label_probs))
+    class_label_probs = [{'class': corpus.label_names[l], 'prob': float(p)} for (l, p) in class_number_probs]
+    return jsonify({'predictions': class_label_probs})
 
 
 @app.route("/layers/<layername>/overview.svg")

@@ -1,4 +1,8 @@
 var filterDisplay = $("#filter-display");
+var classProbsChart;
+vg.parse.spec("/static/vega/classprobs.json", function(chart) {
+    classProbsChart = chart({el:"#classprobs"});
+});
 
 var numFrames = parseInt($("#num-timesteps").text());
 var timeline = new TimelineControl(numFrames, 1000);
@@ -216,7 +220,7 @@ function ConfusionMatrix(timeline) {
                 .style("background-color", function(x) { return d3.rgb(scale(x.d), scale(x.d), scale(x.d)) });
 
             var sampleImages = cols.selectAll("div")
-                .data(function(x) { console.log(x); return [x]; })
+                .data(function(x) { return [x]; })
                 .enter()
                 .append("div")
                 .style("display", "none")
@@ -385,18 +389,8 @@ function updateImageProbs(time) {
     if (current_image == "") {
         return;
     }
-    $.ajax({
-        url: "/checkpoints/" + time + "/predict/" + current_image,
-        dataType: "json"
-    }).done(function(probabilities) {
-        var table = $("#image-probability-table");
-        table.empty();
-        for (var className in probabilities) {
-            table.append(
-                $("<tr>")
-                    .append($("<td>").text(className))
-                    .append($("<td>").text(probabilities[className])));
-        }
+    d3.json("/checkpoints/" + time + "/predict/" + current_image, function(response) {
+        classProbsChart.data({table: response['predictions']}).update();
     });
 }
 timeline.registerCallback(updateImageProbs);
@@ -422,7 +416,7 @@ $(document).ready(function() {
             url: "/imagecorpus/search/" + query,
             dataType: "json"
         }).done(function(searchResults) {
-            console.log("Image corpus query returned " + searchResults.length + " results");
+            //console.log("Image corpus query returned " + searchResults.size + " results");
             results.empty();
             for (var filename in searchResults) {
                 var url = "/imagecorpus/" + searchResults[filename] + ".png";
