@@ -1,8 +1,6 @@
 import os
 import logging
-from deepviz_webui.utils.decaf import load_from_convnet
 import cPickle as pickle
-from itertools import izip
 import numpy as np
 from multiprocessing import Pool
 import time
@@ -13,6 +11,9 @@ _shared_data = None
 
 
 def _process_model(x):
+    # Import is here so that we don't need to have the convnet scripts
+    # on PYTHONPATH in order to interact with already-built databases.
+    from deepviz_webui.utils.decaf import load_from_convnet
     (timestep, model_filename) = x
     (directory, image_data, image_classes, num_classes) = _shared_data
     _log.info("Processing model for timestep %i" % timestep)
