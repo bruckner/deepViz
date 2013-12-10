@@ -10,6 +10,8 @@ $(document).ready(function() {
     $("#footer").append(timeline.dom);
     var confusionMatrix = new ConfusionMatrix(timeline);
     $("#confusionmatrix").append(confusionMatrix.dom);
+    var imageClustering = new ImageClustering(timeline);
+    $("#imageclustering").append(imageClustering.dom);
     timeline.seekToPosition(1);
 });
 
@@ -234,9 +236,7 @@ function ConfusionMatrix(timeline) {
                             .style("background-color", "#000")
                             .style("border", "1px solid white")
                             .attr("src", "/imagecorpus/" + img + ".png")
-                            .on("click", function() {
-                                selectImage(img);
-                            });
+                            .on("click", selectImage);
                     });
                 });
             // Based on http://bl.ocks.org/biovisualize/1016860
@@ -251,13 +251,32 @@ function ConfusionMatrix(timeline) {
     timeline.registerCallback(function(time) { outerThis.refresh(time); });
 }
 
-
+function ImageClustering(timeline) {
+    var table = $("<table>");
+    this.dom = table;
+    this.refresh = function(time) {
+        d3.json("/checkpoints/" + time + "/clusters", function(response) {
+            var clusters = response['clusters'];
+            var tab = d3.select(table[0]);
+            var rows = tab.selectAll("tr").data(clusters);
+            rows.enter().append("tr");
+            var cols = rows.selectAll("td").data(function(d) { return d['topkimages']; });
+            cols.enter().append("td");
+            var images = cols.selectAll("img").data(function(d) { return [d]; });
+            images.enter().append("img");
+            images.attr("src", function(img) {
+                return "/imagecorpus/" + img + ".png";
+            }).on("click", selectImage);
+        });
+    };
+    var outerThis = this;
+    timeline.registerCallback(function(time) { outerThis.refresh(time); });
+}
 /* ***************************** Window Scaling ************************************************* */
 
 $(window).resize(function() {
     var h = $(window).height() - $("#footer").height() - $("#header").height();
-    $('#main-contentarea-inner').height(h);
-    $('#sidebar-inner').height(h);
+    $('.contentarea-height').height(h);
 }).resize();
 
 

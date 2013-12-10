@@ -3,7 +3,6 @@ import logging
 import cPickle as pickle
 import numpy as np
 from multiprocessing import Pool
-from sklearn.cluster import KMeans
 import time
 
 
@@ -95,7 +94,7 @@ class ModelStats(object):
         of an image in cluster `i` that is the `j`'th closest to the cluster centroid
         by Euclidean distance.
         """
-        return self._fc10_features
+        return self._top_k_images_by_cluster
 
     @classmethod
     def load(cls, filename):
@@ -148,6 +147,7 @@ class ModelStats(object):
         fc10_features = np.vstack(fc10_features)
         _log.info("Features have shape: %s" % str(fc10_features.shape))
         _log.info("Starting K-means")
+        from sklearn.cluster import KMeans
         km = KMeans(n_clusters = num_clusters)
         fit = km.fit(fc10_features)
         

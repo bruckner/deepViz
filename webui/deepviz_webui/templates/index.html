@@ -12,16 +12,17 @@
         <ul class="nav navbar-nav">
             <li class="active"><a href="#filters-tab" data-toggle="tab">Filters</a></li>
             <li><a href="#confusion-matrix-tab" data-toggle="tab">Confusion Matrix</a></li>
+            <li><a href="#clustered-images-tab" data-toggle="tab">Clustered Images</a></li>
         </ul>
         <div class="navbar-brand navbar-right navbar-img">
             <img src="" id="currentimage-navbar" width="32" height="32">
         </div>
     </div>
 
-    <div class="row tab-content">
+    <div class="row tab-content" id="tabcontents">
         <div class="tab-pane active" id="filters-tab">
             <div id="sidebar-outer" class="col-xs-3">
-                <div id="sidebar-inner">
+                <div id="sidebar-inner" class="contentarea-height">
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -60,7 +61,7 @@
                 </div>
             </div>
 
-            <div id="main-contentarea-outer" class="col-xs-9">
+            <div class="col-xs-9 contentarea-height">
                 <div style="clear:left;" id="main-contentarea-inner">
                     <div>
                         <div role="main" id="detailed-view">
@@ -82,6 +83,9 @@
         </div>
         <div class="tab-pane" id="confusion-matrix-tab">
             <div class="col col-xs-12" id="confusionmatrix"></div>
+        </div>
+        <div class="tab-pane" id="clustered-images-tab">
+            <div class="col col-xs-12 contentarea-height" id="imageclustering"></div>
         </div>
     </div>
 

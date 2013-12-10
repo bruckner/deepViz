@@ -34,7 +34,7 @@ body {
     overflow: auto;
 }
 
-#main-contentarea-inner {
+#main-contentarea-inner, #clustered-images-tab {
     overflow: auto;
 }
 

@@ -53,6 +53,11 @@ def confusion_matrix(checkpoint):
     return jsonify({'confusionmatrix': json_matrix, 'labelnames': label_names,
                     'sampleimages': sample_images})
 
+@app.route("/checkpoints/<int:checkpoint>/clusters")
+def clustered_images(checkpoint):
+    top_k = get_model_stats_db().get_stats(checkpoint).top_k_images_by_cluster
+    clusters = list({'topkimages': list(int(y) for y in x)} for x in top_k)
+    return jsonify({'clusters': clusters})
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
 @pylabToPNG
