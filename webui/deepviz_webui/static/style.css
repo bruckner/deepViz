@@ -12,7 +12,15 @@
     width: 50%;
 }
 
+.navbar-img {
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
 
+.navbar-img img {
+    vertical-align: bottom;
+    border: 1px solid darkgray;
+}
 
 body {
     height: 100%;

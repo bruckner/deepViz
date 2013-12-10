@@ -368,9 +368,11 @@ function selectImage(imageName) {
         $("#selected-image-panel").hide();
         $("#clear-image-button").addClass("disabled");
         $("#image-probability-table").empty();
+        $("#selected-image").attr("src", "");
     } else {
         $("#clear-image-button").removeClass("disabled");
         $("#selected-image").attr("src", "/imagecorpus/" + imageName + ".png?scale=4");
+        $("#currentimage-navbar").attr("src", "/imagecorpus/" + imageName + ".png");
         $("#selected-image-panel").show();
     }
     updateActiveLayers();
