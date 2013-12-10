@@ -43,10 +43,15 @@ def image_corpus_query(query):
 
 @app.route("/checkpoints/<int:checkpoint>/confusionmatrix")
 def confusion_matrix(checkpoint):
-    confusion_matrix = get_model_stats_db().get_stats(checkpoint).confusion_matrix
+    stats = get_model_stats_db().get_stats(checkpoint)
+    confusion_matrix = stats.confusion_matrix
     json_matrix = list(list(float(y) for y in x) for x in confusion_matrix)
     label_names = get_image_corpus().label_names
-    return jsonify({'confusionmatrix': json_matrix, 'labelnames': label_names})
+    sample_images = stats.images_by_classification
+    SAMPLE_IMAGE_LIMIT = 9
+    sample_images = [[x[:SAMPLE_IMAGE_LIMIT] for x in y] for y in sample_images]
+    return jsonify({'confusionmatrix': json_matrix, 'labelnames': label_names,
+                    'sampleimages': sample_images})
 
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")

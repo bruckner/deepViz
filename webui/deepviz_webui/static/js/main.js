@@ -174,6 +174,12 @@ function ConfusionMatrix(timeline) {
     table.append($("<thead>").append($("<tr>").append($("<td>"))));
     table.append($("<tbody>"));
     this.dom = table;
+    // Inspired by the cross function from http://bl.ocks.org/mbostock/4063663
+    function withParentIndex(d, i) {
+        var n = d.length, c = [], j;
+        for (j = -1; ++j< n;) c.push({i: i, j: j, d: d[j]});
+        return c;
+    }
     this.refresh = function(time) {
         $.ajax({
             url: "/checkpoints/" + time + "/confusionmatrix",
@@ -186,12 +192,14 @@ function ConfusionMatrix(timeline) {
                 .domain([min, max])
                 .range([255, 128]);
             var tab = d3.select(table[0]);
+            // Create the talble heading (doesn't need to update dynamically)
             tab.select("thead tr")
                 .selectAll("th")
                 .data(result['labelnames'])
                 .enter()
                 .append("th")
                 .text(function(x) { return x; });
+
             var rows = tab.select("tbody")
                 .selectAll("tr")
                 .data(matrix);
@@ -199,12 +207,40 @@ function ConfusionMatrix(timeline) {
                 .append("tr")
                 .append("th")
                 .text(function(x, i) { return result['labelnames'][i]; });
+
             var cols = rows.selectAll("td")
-                .data(function(row) { return row; });
+                .data(withParentIndex);
             cols.enter()
                 .append("td");
-            cols.transition().text(function(x) { return x; })
-                .style("background-color", function(x) { return d3.rgb(scale(x), scale(x), scale(x)) });
+            cols.text(function(d, i) { return d.d; })
+                .style("background-color", function(x) { return d3.rgb(scale(x.d), scale(x.d), scale(x.d)) });
+
+            var sampleImages = cols.selectAll("div")
+                .data(function(x) { console.log(x); return [x]; })
+                .enter()
+                .append("div")
+                .style("display", "none")
+                .style("width", 32 * 3 + "px")
+                .each(function(x) {
+                    var div = d3.select(this);
+                    result["sampleimages"][x.i][x.j].forEach(function(img) {
+                        div.append("img")
+                            .attr("width", "32px")
+                            .attr("height", "32px")
+                            .style("background-color", "#000")
+                            .style("border", "1px solid white")
+                            .attr("src", "/imagecorpus/" + img + ".png")
+                            .on("click", function() {
+                                selectImage(img);
+                            });
+                    });
+                });
+            // Based on http://bl.ocks.org/biovisualize/1016860
+            cols.on("mouseover", function() {
+                d3.select(this).select("div").style("display", "");
+            }).on("mouseout", function() {
+                d3.select(this).select("div").style("display", "none");
+            });
         });
     };
     var outerThis = this;
@@ -327,6 +363,7 @@ function getOrElseCreateWeightLayerDisplay(layer_name, image_name) {
 
 
 function selectImage(imageName) {
+    current_image = imageName;
     if (imageName == "") {
         $("#selected-image-panel").hide();
         $("#clear-image-button").addClass("disabled");
@@ -365,8 +402,7 @@ timeline.registerCallback(updateImageProbs);
 
 $("#clear-image-button").click(function() {
     if (current_image != "") {
-        current_image = "";
-        selectImage(current_image);
+        selectImage("");
     }
 });
 
@@ -393,8 +429,7 @@ $(document).ready(function() {
                 results.append(img);
             }
             results.find("img").on("click", function() {
-                current_image = $(this).data("imagenum");
-                selectImage(current_image)
+                selectImage($(this).data("imagenum"))
             });
         });
     }
@@ -420,7 +455,7 @@ function displaySubsetFilters(times, layers, filters, channels, scale) {
     
     if (current_image == "") {
         //return;
-        current_image = "monoplane_s_001543";
+        selectImage(0);
     }
     $.ajax({
         url: "/checkpoints/" + times + "/layers/" + layers + "/filters/" + filters + "/channels/" + channels + "/overview.json?scale=" + scale,

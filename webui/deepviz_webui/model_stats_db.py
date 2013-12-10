@@ -45,7 +45,7 @@ class ModelStatsDB(object):
         """
         global _shared_data
         _shared_data = (directory, image_data, image_classes, num_classes)
-        pool = Pool(4)  # TODO: make pool size configurable
+        pool = Pool(2)  # TODO: make pool size configurable
         pool.map(_process_model, enumerate(model_filenames), 1)
         _shared_data = None
         return ModelStatsDB(directory)
@@ -57,9 +57,10 @@ class ModelStats(object):
     to an image corpus.
     """
 
-    def __init__(self, confusion_matrix, images_by_classification):
+    def __init__(self, confusion_matrix, images_by_classification, probs_by_image):
         self._confusion_matrix = confusion_matrix
         self._images_by_classification = images_by_classification
+        self._probs_by_image = probs_by_image
 
     @property
     def confusion_matrix(self):
@@ -76,6 +77,13 @@ class ModelStats(object):
         of images of true class `i` that were classified as class `j`.
         """
         return self._images_by_classification
+
+    @property
+    def probs_by_image(self):
+        """
+        Returns a list of class probabilities, indexed by image id.
+        """
+        return self._probs_by_image
 
     @classmethod
     def load(cls, filename):
@@ -95,10 +103,11 @@ class ModelStats(object):
         Create a new ModelStatsDatabase by applying a trained model
         to a collection of images.
         """
-        BATCH_SIZE = 1000
+        BATCH_SIZE = 2000
         image_data = image_data.astype(np.float32)
         confusion_matrix = np.zeros((num_classes, num_classes))
         images_by_classification = [[[] for _ in xrange(num_classes)] for _ in xrange(num_classes)]
+        probs_by_image = None
 
         for chunk_start in xrange(0, len(image_data), BATCH_SIZE):
             images = image_data[chunk_start:chunk_start + BATCH_SIZE]
@@ -107,10 +116,15 @@ class ModelStats(object):
             end_time = time.time()
             _log.info("Processed batch of %i images in %f seconds" %
                      (len(images), end_time - start_time))
-            for (offset, image_probs) in enumerate(outputs["probs_cudanet_out"]):
+            probs = outputs["probs_cudanet_out"]
+            if probs_by_image is None:
+                probs_by_image = probs
+            else:
+                probs_by_image = np.concatenate((probs_by_image, probs))
+            for (offset, image_probs) in enumerate(probs):
                 image_num = chunk_start + offset
                 true_class = image_classes[image_num]
                 predicted_class = np.argmax(image_probs)
                 confusion_matrix[true_class][predicted_class] += 1
-                images_by_classification.append(image_num)
-        return ModelStats(confusion_matrix, images_by_classification)
+                images_by_classification[true_class][predicted_class].append(image_num)
+        return ModelStats(confusion_matrix, images_by_classification, probs_by_image)
