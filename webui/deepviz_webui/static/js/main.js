@@ -3,6 +3,10 @@ var classProbsChart;
 vg.parse.spec("/static/vega/classprobs.json", function(chart) {
     classProbsChart = chart({el:"#classprobs"});
 });
+var classProbsNavbar;
+vg.parse.spec("/static/vega/classprobsheader.json", function(chart) {
+    classProbsNavbar = chart({el:"#classprobs-navbar"});
+});
 
 var numFrames = parseInt($("#num-timesteps").text());
 var timeline = new TimelineControl(numFrames, 1000);
@@ -236,7 +240,7 @@ function ConfusionMatrix(timeline) {
                             .style("background-color", "#000")
                             .style("border", "1px solid white")
                             .attr("src", "/imagecorpus/" + img + ".png")
-                            .on("click", selectImage);
+                            .on("click", function() { selectImage(img); });
                     });
                 });
             // Based on http://bl.ocks.org/biovisualize/1016860
@@ -392,6 +396,8 @@ function selectImage(imageName) {
         $("#clear-image-button").addClass("disabled");
         $("#image-probability-table").empty();
         $("#selected-image").attr("src", "");
+        $("#currentimage-navbar").attr("src", "");
+        classProbsNavbar.data({table: []}).update();
     } else {
         $("#clear-image-button").removeClass("disabled");
         $("#selected-image").attr("src", "/imagecorpus/" + imageName + ".png?scale=4");
@@ -410,6 +416,7 @@ function updateImageProbs(time) {
     }
     d3.json("/checkpoints/" + time + "/predict/" + current_image, function(response) {
         classProbsChart.data({table: response['predictions']}).update();
+        classProbsNavbar.data({table: response['predictions']}).update();
     });
 }
 timeline.registerCallback(updateImageProbs);

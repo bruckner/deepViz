@@ -1,0 +1,31 @@
+{
+    "width": 100,
+    "height": 28,
+    "margin": {"top": 2, "left": 0, "bottom": 0, "right": 0},
+    "data": [{"name": "table"}],
+    "scales": [
+        {"name":"ord", "type":"ordinal", "range":"width", "domain":{"data":"table", "field":"data.class"}},
+        {"name":"dat", "range":"height", "nice":true, "domain":{"data":"table", "field":"data.prob"}}
+    ],
+    "marks": [
+        {
+            "type": "rect",
+            "from": {"data":"table"},
+            "key": "data.class",
+            "properties": {
+                "enter": {
+                    "width": {"scale":"ord", "band":true, "offset":-1},
+                    "x": {"scale":"ord", "field":"data.class"}
+                },
+                "update": {
+                    "fill": {"value":"white"},
+                    "y2": {"scale":"dat", "value":0},
+                    "y": {"scale":"dat", "field":"data.prob"}
+                },
+                "hover": {
+                    "fill": {"value":"yellow"}
+                }
+            }
+        }
+    ]
+}
