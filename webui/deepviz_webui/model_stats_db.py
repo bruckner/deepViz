@@ -3,6 +3,7 @@ import logging
 import cPickle as pickle
 import numpy as np
 from multiprocessing import Pool
+from sklearn.cluster import KMeans
 import time
 
 
@@ -58,10 +59,11 @@ class ModelStats(object):
     to an image corpus.
     """
 
-    def __init__(self, confusion_matrix, images_by_classification, probs_by_image):
+    def __init__(self, confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster):
         self._confusion_matrix = confusion_matrix
         self._images_by_classification = images_by_classification
         self._probs_by_image = probs_by_image
+        self._top_k_images_by_cluster = top_k_images_by_cluster
 
     @property
     def confusion_matrix(self):
@@ -85,6 +87,15 @@ class ModelStats(object):
         Returns a list of class probabilities, indexed by image id.
         """
         return self._probs_by_image
+        
+    @property
+    def top_k_images_by_cluster(self):
+        """
+        Returns a matrix of image ids, where entry `A[i, j]` gives the id
+        of an image in cluster `i` that is the `j`'th closest to the cluster centroid
+        by Euclidean distance.
+        """
+        return self._fc10_features
 
     @classmethod
     def load(cls, filename):
@@ -99,7 +110,7 @@ class ModelStats(object):
             pickle.dump(self, f)
 
     @classmethod
-    def create(cls, model, image_data, image_classes, num_classes):
+    def create(cls, model, image_data, image_classes, num_classes, num_clusters=30, num_neighbors=20):
         """
         Create a new ModelStatsDatabase by applying a trained model
         to a collection of images.
@@ -109,11 +120,12 @@ class ModelStats(object):
         confusion_matrix = np.zeros((num_classes, num_classes))
         images_by_classification = [[[] for _ in xrange(num_classes)] for _ in xrange(num_classes)]
         probs_by_image = None
+        fc10_features = []
 
         for chunk_start in xrange(0, len(image_data), BATCH_SIZE):
             images = image_data[chunk_start:chunk_start + BATCH_SIZE]
             start_time = time.time()
-            outputs = model.predict(data=images, output_blobs=["probs_cudanet_out"])
+            outputs = model.predict(data=images, output_blobs=["probs_cudanet_out", "fc10_cudanet_out"])
             end_time = time.time()
             _log.info("Processed batch of %i images in %f seconds" %
                      (len(images), end_time - start_time))
@@ -128,4 +140,30 @@ class ModelStats(object):
                 predicted_class = np.argmax(image_probs)
                 confusion_matrix[true_class][predicted_class] += 1
                 images_by_classification[true_class][predicted_class].append(image_num)
-        return ModelStats(confusion_matrix, images_by_classification, probs_by_image)
+            
+            fc10_features.append(outputs["fc10_cudanet_out"])
+        
+        #Code to do top k clusters    
+        _log.info("Starting clustering")
+        fc10_features = np.vstack(fc10_features)
+        _log.info("Features have shape: %s" % str(fc10_features.shape))
+        _log.info("Starting K-means")
+        km = KMeans(n_clusters = num_clusters)
+        fit = km.fit(fc10_features)
+        
+        #For each point, get its distance from its cluster center.
+        _log.info("Computing distances.")
+        dists = np.linalg.norm(fc10_features - fit.cluster_centers_[fit.labels_] , ord=2, axis=1)
+        
+        #Build a matrix of kNN by point.
+        top_k_images_by_cluster = [[] for _ in xrange(num_clusters)]
+        for k in xrange(0, num_clusters):
+            #Get indexes of elements with this label.
+            inds = np.where(fit.labels_ == k)
+            
+            #Reorder indexes according to closest distance.
+            tab = np.column_stack((inds[0],dists[inds]))
+            topNeighbors = tab[tab[:,1].argsort()][0:num_neighbors,0]
+            top_k_images_by_cluster[k] = map(int, list(topNeighbors))
+        
+        return ModelStats(confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster)
