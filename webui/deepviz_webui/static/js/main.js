@@ -41,6 +41,12 @@ function TimelineResponsiveImage (timeline, request_url) {
                 delete outerThis.loading_images[time];
                 outerThis.image_cache[time] = img;
                 outerThis.refresh(time);
+                // Because the SVG and image are absolutely positioned, we need to
+                // use Javascript to set their parent element's dimensons so that the
+                // content area scrolls properly; see http://stackoverflow.com/questions/7321281
+                var fd = $(this).closest('.filter-display');
+                fd.height($(this).height());
+                fd.width($(this).width());
             });
         } else {
             var img = this.image_cache[time];
@@ -68,11 +74,6 @@ function WeightLayerDisplay (timeline, layer_name, scale) {
     this.dom.append(img.dom);
     this.refresh = function(time) { img.refresh(time) };
     obj.load(function() {
-        // Because the SVG and image are absolutely positioned, we need to
-        // use Javascript to set their parent element's dimensons so that the
-        // content area scrolls properly; see http://stackoverflow.com/questions/7321281
-        obj.parent().height(obj.height());
-        obj.parent().width(obj.width());
         var svg = $(obj[0].contentDocument.documentElement);
         var filterInfo = $("#selected-filter-number");
         svg.find("rect").on("mouseover", function() {
