@@ -154,8 +154,8 @@ def layer_dag_to_svg():
     for layer in model.layers:
         graph.add_node(layer['name'], layer_attributes=layer)
     for layer in model.layers:
-        for inputLayer in layer.get("inputLayers", []):
-            graph.add_edge(inputLayer['name'], layer['name'])
+        for inputLayer in layer.get("inputs", []):
+            graph.add_edge(model.layers[inputLayer]['name'], layer['name'])
     pydot_graph = nx.to_pydot(graph)
     pydot_graph.set_rankdir("LR")
     svg = pydot_graph.create_svg(prog="dot")
