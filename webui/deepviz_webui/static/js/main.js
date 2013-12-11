@@ -16,6 +16,8 @@ $(document).ready(function() {
     $("#confusionmatrix").append(confusionMatrix.dom);
     var imageClustering = new ImageClustering(timeline);
     $("#imageclustering").append(imageClustering.dom);
+    $('a[href="#clustered-images-tab"]').click(imageClustering.refresh(timeline.currentPosition()));
+    $('a[href="#confusion-matrix-tab"]').click(confusionMatrix.refresh(timeline.currentPosition()));
     timeline.seekToPosition(1);
 });
 
@@ -253,7 +255,11 @@ function ConfusionMatrix(timeline) {
         });
     };
     var outerThis = this;
-    timeline.registerCallback(function(time) { outerThis.refresh(time); });
+    timeline.registerCallback(function(time) {
+        if ($('#confusion-matrix-tab').is(':visible')) {
+            outerThis.refresh(time);
+        }
+    });
 }
 
 function ImageClustering(timeline) {
@@ -275,7 +281,11 @@ function ImageClustering(timeline) {
         });
     };
     var outerThis = this;
-    timeline.registerCallback(function(time) { outerThis.refresh(time); });
+    timeline.registerCallback(function(time) {
+        if ($('#clustered-images-tab').is(':visible')) {
+            outerThis.refresh(time);
+        }
+    });
 }
 /* ***************************** Window Scaling ************************************************* */
 
