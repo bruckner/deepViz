@@ -4,6 +4,7 @@ from math import sqrt
 import numpy as np
 from PIL import Image
 
+from decaf.util.translator import conversions
 
 class CIFAR10ImageCorpus(object):
     """
@@ -32,6 +33,8 @@ class CIFAR10ImageCorpus(object):
                     self._image_data = np.concatenate((self._image_data, data['data'].T))
                     self._image_labels.extend(data['labels'])
                     self._filenames.extend(data["filenames"])
+        ksize = sqrt(len(self._image_data[0]) / 3)
+        self._image_data = conversions.imgs_cudaconv_to_decaf(self._image_data, ksize, 3)
 
     def find_images(self, query):
         """
@@ -42,11 +45,8 @@ class CIFAR10ImageCorpus(object):
                 yield (image_name, image_num)
 
     def get_image(self, image_num):
-        data = self._image_data[image_num]
-        ksize = sqrt(len(data) / 3)
-        rgb_data = np.rot90(np.reshape(data, (ksize, ksize, 3), 'F'), 3)
-        return Image.fromarray(rgb_data)
+        return Image.fromarray(self._image_data[image_num])
 
     def get_all_images_data(self):
-        ksize = sqrt(len(self._image_data[0]) / 3)
-        return np.reshape(self._image_data, (self._image_data.shape[0], ksize, ksize, 3), 'F')
+        return self._image_data
+
