@@ -6,7 +6,7 @@ from deepviz_webui.utils.decaf import reshape_layer_for_visualization, \
 from deepviz_webui.utils.images import normalize, generate_svg_filter_map
 from deepviz_webui.utils.misc import mapterminals
 from deepviz_webui.selectmodels import select_region_query
-from deepviz_webui.viewdecorators import pylabToJsonBase64PNGs, pylabToPNG
+from deepviz_webui.viewdecorators import pylabToJsonBase64PNGs, pylabToPNG, browserCacheIndefinitely
 
 from decaf.util.visualize import show_multiple, show_channels, show_single
 
@@ -19,6 +19,7 @@ from PIL import Image
 
 
 @app.route("/imagecorpus/<int:image_num>.png")
+@browserCacheIndefinitely
 def get_image_from_corpus(image_num):
     corpus = get_image_corpus()
     image = corpus.get_image(image_num)
@@ -60,6 +61,7 @@ def clustered_images(checkpoint):
     return jsonify({'clusters': clusters})
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/overview.png")
+@browserCacheIndefinitely
 @pylabToPNG
 def layer_overview_png(checkpoint, layername):
     model = get_models()[checkpoint]
@@ -80,6 +82,7 @@ def run_model_on_corpus_image(checkpoint, imagenum, output_blobs):
 
 
 @app.route("/checkpoints/<int:checkpoint>/layers/<layername>/apply/<int:imagenum>/overview.png")
+@browserCacheIndefinitely
 @pylabToPNG
 def convolved_layer_overview_png(checkpoint, imagenum, layername):
     """
@@ -110,6 +113,7 @@ def predict_for_image(checkpoint, imagenum):
 
 
 @app.route("/layers/<layername>/overview.svg")
+@browserCacheIndefinitely
 def layer_overview_svg_container(layername):
     """
     Generates transparent SVGs that are overlaid on filter views
@@ -147,6 +151,7 @@ def layer_filters_channels_image_json(checkpoints, layernames, filters, channels
 
 
 @app.route("/layers.svg")
+@browserCacheIndefinitely
 @cached()
 def layer_dag_to_svg():
     model = get_model()
