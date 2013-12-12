@@ -3,9 +3,9 @@ pil
 pydot
 networkx
 tornado
+scikit-learn
 svgwrite
 
 # Needed for cuda-convnet:
-python-magic
 matplotlib
 numpy
