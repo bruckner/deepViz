@@ -174,4 +174,4 @@ class ModelStats(object):
             topNeighbors = tab[tab[:,1].argsort()][0:num_neighbors,0]
             top_k_images_by_cluster[k] = map(int, list(topNeighbors))
         
-        return ModelStats(confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster, fit.cluster_centers)
+        return ModelStats(confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster, fit.cluster_centers_)
