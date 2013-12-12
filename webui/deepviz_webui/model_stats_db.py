@@ -58,11 +58,12 @@ class ModelStats(object):
     to an image corpus.
     """
 
-    def __init__(self, confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster):
+    def __init__(self, confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster, cluster_centers):
         self._confusion_matrix = confusion_matrix
         self._images_by_classification = images_by_classification
         self._probs_by_image = probs_by_image
         self._top_k_images_by_cluster = top_k_images_by_cluster
+        self._cluster_centers = cluster_centers
 
     @property
     def confusion_matrix(self):
@@ -95,6 +96,13 @@ class ModelStats(object):
         by Euclidean distance.
         """
         return self._top_k_images_by_cluster
+        
+    @property
+    def cluster_centers(self):
+        """
+        Returns a list of vectors. Each vector represents a centroid for the clustering algorithm.
+        """
+        return self._cluster_centers
 
     @classmethod
     def load(cls, filename):
@@ -124,7 +132,7 @@ class ModelStats(object):
         for chunk_start in xrange(0, len(image_data), BATCH_SIZE):
             images = image_data[chunk_start:chunk_start + BATCH_SIZE]
             start_time = time.time()
-            outputs = model.predict(data=images, output_blobs=["probs_cudanet_out", "fc10_cudanet_out"])
+            outputs = model.predict(data=images, output_blobs=["probs_cudanet_out"])
             end_time = time.time()
             _log.info("Processed batch of %i images in %f seconds" %
                      (len(images), end_time - start_time))
@@ -140,7 +148,7 @@ class ModelStats(object):
                 confusion_matrix[true_class][predicted_class] += 1
                 images_by_classification[true_class][predicted_class].append(image_num)
             
-            fc10_features.append(outputs["fc10_cudanet_out"])
+            fc10_features.append(outputs["probs_cudanet_out"])
         
         #Code to do top k clusters    
         _log.info("Starting clustering")
@@ -166,4 +174,4 @@ class ModelStats(object):
             topNeighbors = tab[tab[:,1].argsort()][0:num_neighbors,0]
             top_k_images_by_cluster[k] = map(int, list(topNeighbors))
         
-        return ModelStats(confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster)
+        return ModelStats(confusion_matrix, images_by_classification, probs_by_image, top_k_images_by_cluster, fit.cluster_centers)
