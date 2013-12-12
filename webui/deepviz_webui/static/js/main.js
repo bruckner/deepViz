@@ -16,8 +16,11 @@ $(document).ready(function() {
     $("#confusionmatrix").append(confusionMatrix.dom);
     var imageClustering = new ImageClustering(timeline);
     $("#imageclustering").append(imageClustering.dom);
+	var directCompare = new DirectCompare();
+	$("#directcompare").append(directCompare.dom);
     $('a[href="#clustered-images-tab"]').click(imageClustering.refresh(timeline.currentPosition()));
     $('a[href="#confusion-matrix-tab"]').click(confusionMatrix.refresh(timeline.currentPosition()));
+    $('a[href="#directcompare-tab"]').click(directCompare.refresh());
     timeline.seekToPosition(1);
 });
 
@@ -484,28 +487,59 @@ var current_layers = "";
 var current_filters = "";
 var current_channels = "";
 
-function displaySubsetFilters(times, layers, filters, channels, scale) {
+function displaySubsetFilters(tab, times, layers, filters, channels, scale, image) {
     
+    var url = "";
     if (current_image == "") {
-        //return;
-        selectImage(0);
+        var url = "/checkpoints/" + times + "/layers/" + layers + "/filters/" + filters + "/channels/" + channels + "/overview.json?scale=" + scale;	
+        
     }
+	else {
+		var url = "/checkpoints/" + times + "/layers/" + layers + "/filters/" + filters + "/channels/" + channels + "/apply/" + current_image + "/overview.json?scale=" + scale;	
+	}
+    
+
     $.ajax({
-        url: "/checkpoints/" + times + "/layers/" + layers + "/filters/" + filters + "/channels/" + channels + "/overview.json?scale=" + scale,
+        url: url,
         dataType: "json"
     }).done(function(image_obj) {
-        var table = $("#multi-filter-table");
+		console.log("Got image from web service")
+        var table = $("#multi-filter-table")
         table.empty();
-        this.dom=$("<div>");
-        for (var t in image_obj) {
+
+		var times = Object.keys(image_obj);
+		var sorted_times = times.sort();
+		console.log(sorted_times)
+		var layers = Object.keys(image_obj[sorted_times[0]]);
+		var sorted_layers = layers.sort();
+		console.log(sorted_layers);
+		
+		var row = $("<tr>");
+		row.append("<td>")
+		for (var l in sorted_layers) {
+			row.append($("<td>").append($("<center>").append(sorted_layers[l])));
+		}
+		table.append(row);
+
+        for (var t in sorted_times) {
             var row = $("<tr>")
-            for (var l in image_obj[t]) {
-                var img = $("<img>").attr('src', image_obj[t][l]);
+			row.append($("<td>").append("Time: " + sorted_times[t]));
+            for (var l in sorted_layers) {
+                var img = $("<img>").attr('src', image_obj[sorted_times[t]][sorted_layers[l]]);
                 row.append($("<td>").append(img));
             }
             table.append(row);
         }
     });
+}
+
+function DirectCompare() {
+    var table = $("<table>");
+    this.dom = table;
+    var outerThis = this;
+    this.refresh = function(time) {
+        displaySubsetFilters(table, "1,40", "conv1,conv2,conv3", "1-20", "1-3", 5);
+    };
 }
 
 // Uncomment this to see a handful of images.
