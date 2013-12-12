@@ -132,8 +132,8 @@ def layer_overview_svg_container(layername):
 @pylabToJsonBase64PNGs
 def layer_filters_channels_overview_json(checkpoints, layernames, filters, channels):
     region = select_region_query(get_models(), times=checkpoints, layers=layernames, filters=filters, channels=channels)
-    images = mapterminals(show_multiple, region)
-    #todo need to apply show_multiple to each one of these.
+    #images = mapterminals(show_multiple, region)
+    images = region
     return images
     
     
@@ -145,8 +145,8 @@ def layer_filters_channels_image_json(checkpoints, layernames, filters, channels
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
     
     out = select_region_query(get_models(), times=checkpoints, layers=layernames, filters=filters, channels=channels, image=arr)
-    #todo need to apply show_multiple to each one of these.
-    images = mapterminals(show_multiple, out)
+    images = out
+    #images = mapterminals(show_multiple, out)
     return images
 
 

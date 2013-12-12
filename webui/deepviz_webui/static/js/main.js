@@ -538,11 +538,6 @@ function DirectCompare() {
     this.dom = table;
     var outerThis = this;
     this.refresh = function(time) {
-        displaySubsetFilters(table, "1,40", "conv1,conv2,conv3", "1-20", "1-3", 5);
+        displaySubsetFilters(table, "1,40", "conv1,conv2,conv3", "1-10", "0-3", 5);
     };
 }
-
-// Uncomment this to see a handful of images.
-// $(document).ready(function() {
-//    displaySubsetFilters("18-20", "conv1,conv2,conv3", "1-20", "1-3", 5);
-// });

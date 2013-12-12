@@ -6,7 +6,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../scripts"))
 
 from utils.decaf import load_from_convnet, get_layer_dimensions, reshape_layer_for_visualization, flatten_filters
-from decaf.util.visualize import show_channels
+from decaf.util.visualize import show_channels, show_multiple
 
 #This may be the worst thing I have ever done.
 ALL=None
@@ -108,7 +108,7 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
 
 
             print flat_region.shape            
-            region[t][l] = flat_region
+            region[t][l] = show_multiple(flat_region, ncols=len(channels[l]))
             
             #This was here when we wanted one image per filter.
             # for f in filters[l]:
