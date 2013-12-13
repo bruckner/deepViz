@@ -32,5 +32,6 @@ if __name__ == "__main__":
     checkpoints = sorted(os.listdir(args.model))
     model_filenames = (os.path.join(args.model, str(c)) for c in checkpoints)
     corpus = CIFAR10ImageCorpus(args.cifar)
-    ModelStatsDB.create(args.output_dir, model_filenames, corpus.get_all_images_data(),
+    image_data = corpus.get_all_images_data() - corpus.get_mean()
+    ModelStatsDB.create(args.output_dir, model_filenames, image_data,
                         corpus._image_labels, args.num_classes)
