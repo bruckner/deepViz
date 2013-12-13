@@ -5,7 +5,5 @@ networkx
 tornado
 scikit-learn
 svgwrite
-
-# Needed for cuda-convnet:
 matplotlib
-numpy
+numpy>=1.8.0
