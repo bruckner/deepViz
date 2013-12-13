@@ -53,6 +53,20 @@ body {
     position: relative;
 }
 
+.side-filters {
+    float:right;
+    margin-right: 140px;
+}
+
+.side-filters object {
+    position: absolute;
+    top: -99999990px;
+}
+
+.side-filters img {
+    width: 300px;
+}
+
 .filter-display object {
     position: absolute;
     z-index: 3;

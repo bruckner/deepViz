@@ -364,7 +364,17 @@ function showFilterForLayer(name) {
     // Hide images by positioning them offscreen.  Avoids a reload that occurs
     // when <object> display style changes.
     filterDisplay.find('.filter-display').addClass("hide-offscreen");
-    getOrElseCreateWeightLayerDisplay(name, image_name).removeClass("hide-offscreen");
+    filterDisplay.find('.feature-filters').addClass("hide-offscreen");
+    var display = getOrElseCreateWeightLayerDisplay(name, image_name)
+        .removeClass("side-filters")
+        .removeClass("hide-offscreen");
+    if (image_name !== "" && name.match(/^(pool|conv)[1-3]/)) {
+        var filter_layer = "conv" + parseInt(name.substr(4));
+        getOrElseCreateWeightLayerDisplay(filter_layer, "")
+            .removeClass("hide-offscreen")
+            .addClass("side-filters")
+            .after(display);
+    }
 }
 
 /* ************************************ Filter Display ****************************************** */
