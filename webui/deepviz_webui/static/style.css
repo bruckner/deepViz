@@ -46,6 +46,7 @@ body {
 
 .filter-display {
   overflow: hidden;
+  margin-bottom: 100px;
 }
 
 #filter-display {
