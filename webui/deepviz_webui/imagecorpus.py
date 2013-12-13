@@ -15,6 +15,7 @@ class CIFAR10ImageCorpus(object):
         with open(os.path.join(root_folder, "batches.meta")) as metafile:
             meta = cPickle.load(metafile)
             self.label_names = meta['label_names']
+            self._raw_data_mean = meta['data_mean']
         batches = sorted(os.listdir(root_folder))[1:]  # Skip batches.meta.
         self._image_data = None
         self._image_labels = None
@@ -35,6 +36,8 @@ class CIFAR10ImageCorpus(object):
                     self._filenames.extend(data["filenames"])
         ksize = sqrt(len(self._image_data[0]) / 3)
         self._image_data = conversions.imgs_cudaconv_to_decaf(self._image_data, ksize, 3)
+        self._data_mean = \
+            conversions.imgs_cudaconv_to_decaf(self._raw_data_mean.T, ksize, 3)
 
     def find_images(self, query):
         """
@@ -50,3 +53,5 @@ class CIFAR10ImageCorpus(object):
     def get_all_images_data(self):
         return self._image_data
 
+    def get_mean(self):
+        return self._data_mean

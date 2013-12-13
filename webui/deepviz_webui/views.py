@@ -75,9 +75,9 @@ def layer_overview_png(checkpoint, layername):
 def run_model_on_corpus_image(checkpoint, imagenum, output_blobs):
     # This is based on decaf's "imagenet" script:
     corpus = get_image_corpus()
-    image = corpus.get_image(imagenum)
+    image = corpus.get_all_images_data()[imagenum] - corpus.get_mean()
     model = get_models()[checkpoint]
-    arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
+    arr = image.astype(np.float32)
     return model.predict(data=arr, output_blobs=output_blobs)
 
 

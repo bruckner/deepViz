@@ -18,8 +18,8 @@ $(document).ready(function() {
     $("#imageclustering").append(imageClustering.dom);
 	var directCompare = new DirectCompare();
 	$("#directcompare").append(directCompare.dom);
-    $('a[href="#clustered-images-tab"]').click(imageClustering.refresh(timeline.currentPosition()));
-    $('a[href="#confusion-matrix-tab"]').click(confusionMatrix.refresh(timeline.currentPosition()));
+    $('a[href="#clustered-images-tab"]').click(imageClustering.refresh(timeline.currentPosition() - 1));
+    $('a[href="#confusion-matrix-tab"]').click(confusionMatrix.refresh(timeline.currentPosition() - 1));
     $('a[href="#directcompare-tab"]').click(directCompare.refresh());
     timeline.seekToPosition(1);
 });
