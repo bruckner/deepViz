@@ -367,13 +367,15 @@ function showFilterForLayer(name) {
     filterDisplay.find('.feature-filters').addClass("hide-offscreen");
     var display = getOrElseCreateWeightLayerDisplay(name, image_name)
         .removeClass("side-filters")
+        .css("float", "")
         .removeClass("hide-offscreen");
     if (image_name !== "" && name.match(/^(pool|conv)[1-3]/)) {
         var filter_layer = "conv" + parseInt(name.substr(4));
         getOrElseCreateWeightLayerDisplay(filter_layer, "")
             .removeClass("hide-offscreen")
             .addClass("side-filters")
-            .after(display);
+            .before(display);
+        display.css("float", "left");
     }
 }
 
