@@ -1,0 +1,21 @@
+@import "bootstrap/variables.less";
+@import "variables.less";
+
+text {
+  font-family: @font-family-base;
+}
+
+.node {
+  &.active {
+    cursor: pointer;
+    text { fill: blue; }
+    &:hover {
+      ellipse { fill: #979797;}
+      text { fill: white; };
+    }
+  }
+  ellipse { fill: white; }
+  &.selected ellipse {
+    fill: #E0E0E0;
+  }
+}

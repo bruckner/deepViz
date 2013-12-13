@@ -318,7 +318,7 @@ $("#layer-dag").load(function() {
     var svg = $("#layer-dag")[0].contentDocument;
     dagSVG = $(svg.documentElement);
     var css = svg.createElementNS("http://www.w3.org/2000/svg", "style");
-    css.textContent = "@import url('/static/dag.css')";
+    css.textContent = "@import url('/static/css/dag.css')";
     dagSVG.append(css);
 
     updateActiveLayers();
