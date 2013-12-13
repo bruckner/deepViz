@@ -45,7 +45,7 @@ function TimelineResponsiveImage (timeline, request_url) {
             img.load(function() {
                 delete outerThis.loading_images[time];
                 outerThis.image_cache[time] = img;
-                outerThis.refresh(time);
+                outerThis.refresh(timeline.currentPosition() - 1);
                 // Because the SVG and image are absolutely positioned, we need to
                 // use Javascript to set their parent element's dimensons so that the
                 // content area scrolls properly; see http://stackoverflow.com/questions/7321281
@@ -55,9 +55,8 @@ function TimelineResponsiveImage (timeline, request_url) {
             });
         } else {
             var img = this.image_cache[time];
+            this.dom.children().hide();
             img.show();
-            this.dom.empty();
-            this.dom.append(img);
         }
     };
     var outerThis = this;
