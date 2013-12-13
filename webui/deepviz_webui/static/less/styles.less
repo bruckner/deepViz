@@ -1,0 +1,106 @@
+@import "bootstrap/bootstrap.less";
+
+// Disable navbar collapse for small screen sizes:
+@grid-float-breakpoint: 0;
+
+// Utility classes
+.hide-offscreen {
+  position: absolute;
+  top: -99999990px;
+}
+
+// Content Styles
+body {
+  height: 100%;
+  overflow: hidden;
+  padding-top: 70px;
+}
+
+#main-contentarea-inner, #clustered-images-tab {
+  overflow: auto;
+}
+
+.navbar-img {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  img {
+    vertical-align: bottom;
+    border: 1px solid darkgray;
+  }
+}
+
+#layer-dag {
+  width: 100%;
+  height: 150px;
+  padding: 10px 20px 10px 10px;
+}
+
+.filter-display {
+  overflow: hidden;
+  margin-bottom: 100px;
+
+  object {
+    position: absolute;
+    z-index: 3;
+  }
+  img {
+    position: absolute;
+    z-index: 2;
+  }
+}
+
+#filter-display {
+  position: relative;
+}
+
+.side-filters {
+  float:right;
+  margin-right: 140px;
+  object {
+    .hide-offscreen;
+  }
+  img {
+    width: 300px;
+  }
+}
+
+#footer {
+  padding-top: 15px;
+  border-top-color: #464646;
+}
+
+.timeline {
+  text-align: center;
+  vertical-align: middle;
+  input {
+    width: 50%;
+  }
+}
+
+// Sidebar
+
+#sidebar-inner {
+  padding: 5px;
+  font-size: 12px;
+  overflow: auto;
+}
+
+#imagechooser {
+  input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .btn-group {
+    position: relative;
+    top: -20px;
+  }
+}
+
+#image-search-results {
+  max-height: 200px;
+  overflow: auto;
+}
+
+#selected-image-panel div.panel-body {
+  text-align: center;
+}
