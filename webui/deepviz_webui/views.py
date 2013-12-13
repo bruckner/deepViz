@@ -1,3 +1,4 @@
+import math
 from deepviz_webui.app import app, cached
 from deepviz_webui.globalresources import get_image_corpus, get_model, \
     get_models, get_model_stats_db
@@ -68,7 +69,7 @@ def layer_overview_png(checkpoint, layername):
     layer = model.layers[layername]
     (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
     reshaped = reshape_layer_for_visualization(layer, combine_channels=(num_channels == 3))
-    ncols = 1 if num_channels == 3 else num_channels
+    ncols = 6 if num_channels in  (1, 3) else num_channels
     return show_multiple(normalize(reshaped), ncols=ncols)
 
 
@@ -122,9 +123,11 @@ def layer_overview_svg_container(layername):
     model = get_models()[0]
     layer = model.layers[layername]
     (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
-    ncols = 1 if num_channels == 3 else num_channels
+    ncols = 6 if num_channels in  (1, 3) else num_channels
+    nrows = int(math.ceil(float(num_filters) / 6)) if num_channels in (1, 3) else num_filters
+    print '!!!', num_channels, ncols
     scale = int(request.args.get('scale', 1))
-    svg = generate_svg_filter_map(num_filters * ncols, ksize, ncols, scale)
+    svg = generate_svg_filter_map(nrows * ncols, ksize, ncols, scale)
     return Response(svg, mimetype="image/svg+xml")
     
     
