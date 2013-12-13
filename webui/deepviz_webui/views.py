@@ -125,7 +125,6 @@ def layer_overview_svg_container(layername):
     (num_filters, ksize, num_channels) = get_layer_dimensions(layer)
     ncols = 6 if num_channels in  (1, 3) else num_channels
     nrows = int(math.ceil(float(num_filters) / 6)) if num_channels in (1, 3) else num_filters
-    print '!!!', num_channels, ncols
     scale = int(request.args.get('scale', 1))
     svg = generate_svg_filter_map(nrows * ncols, ksize, ncols, scale)
     return Response(svg, mimetype="image/svg+xml")
@@ -163,7 +162,7 @@ def layer_dag_to_svg():
         graph.add_node(layer['name'], layer_attributes=layer)
     for layer in model.layers:
         for inputLayer in layer.get("inputs", []):
-            graph.add_edge(model.layers[inputLayer]['name'], layer['name'])
+            graph.add_edge(model.layers[inputLayer]['name'], layer['name'], label=model.layers[inputLayer]['outputs'])
     pydot_graph = nx.to_pydot(graph)
     pydot_graph.set_rankdir("LR")
     svg = pydot_graph.create_svg(prog="dot")
