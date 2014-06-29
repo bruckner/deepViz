@@ -5,7 +5,6 @@ import numpy as np
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../scripts"))
 
-from utils.decaf import load_from_convnet, get_layer_dimensions, reshape_layer_for_visualization, flatten_filters
 from decaf.util.visualize import show_channels, show_multiple
 
 #This may be the worst thing I have ever done.
@@ -32,6 +31,8 @@ def select_point(shaped_layer, f, c):
 
 
 def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply_prediction=None):
+    # TODO Fix to work with DecafLayer
+    raise Exception('Broken: Needs update to DecafLayer')
     #Default is to treat None as "All"
     if times is ALL:
         times = range(len(model))
@@ -83,7 +84,6 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
             #with "_cudanet_out" at the end of them. 
             blobs = ["%s_cudanet_out" % l for l in layers]
             predicted_model = model[t].predict(data=apply_prediction, output_blobs=blobs)
-            print predicted_model
             
         for l in layers:
             region[t][l] = {}
@@ -92,7 +92,6 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
                 
                 #FIXME
                 shaped_layer = predicted_model["%s_cudanet_out" % l]
-                print shaped_layer.shape
                 shaped_region = shaped_layer[:,:,:,filters[l]]
                 flat_region = flatten_filters(shaped_region, len(filters[l]), 1, shaped_layer.shape[1])
                 #So we know we're getting a 10x32x32 result. We probably want 10 32x32 images.
@@ -100,14 +99,14 @@ def select_region(model, times=ALL, layers=ALL, filters=ALL, channels=ALL, apply
                 
                 #Todo - need to figure out the shape of a prediction and then map that to our output image shape.
             else:
-                shaped_layer = reshape_layer_for_visualization(model[t].layers[l], preserve_dims=True)
+                # XXX Check inputs here...
+                shaped_layer = reshape_layer_for_visualization(model[t].layers[l], combine=True)
             
                 #I believe I am somehow abusing numpy's indexing here, but this seems to work.
                 shaped_region = shaped_layer[filters[l],:,:,:][:,:,:,channels[l]]
                 flat_region = flatten_filters(shaped_region, len(filters[l]), len(channels[l]), shaped_layer.shape[1])
 
 
-            print flat_region.shape            
             region[t][l] = show_multiple(flat_region, ncols=len(channels[l]))
             
             #This was here when we wanted one image per filter.
@@ -147,28 +146,19 @@ def select_region_query(model, **kwargs):
 def main(args):
     '''For testing'''
     # Add the ConvNet scripts to the import path
-    from utils.decaf import load_from_convnet
+    from models import DecafModel
     
     #Take the directory and run through it to get a single "model"
     model_path = args[1]
     checkpoints = sorted(os.listdir(model_path))
-    model = [load_from_convnet(os.path.join(model_path, c)) for c in checkpoints]
+    model = [DecafModel.load_from_convnet(os.path.join(model_path, c)) for c in checkpoints]
     
-    #print select_region_query(model, {"times":"0","layers":"conv1"})
-    #print select_region_query(model, {"times":"0-4", "layers":"conv1,conv2", "filters":"1-5", "channels":"1,3"})
     from imagecorpus import CIFAR10ImageCorpus
     corpus = CIFAR10ImageCorpus("cifar-10-py-colmajor")
     image = corpus.get_image("dog_s_001795.png")
     arr = np.array(image.getdata()).reshape(1, 32, 32, 3).astype(np.float32)
-    print model[7].blobs.keys()
-    print model[0].layers.keys()
     blobs = set(model[0].blobs) & set(["%s_cudanet_out" % s for s in model[0].layers.keys()])
-    print model[7].predict(data=arr, output_blobs=blobs)
-    
-    print select_region_query(model, {"times":"0-4", "layers":"conv1,conv2", "filters":"1-5", "channels":"1,3", "image":arr})
-    
-    print
-    
+
 if __name__ == "__main__":
     import sys
     main(sys.argv)

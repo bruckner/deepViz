@@ -2,9 +2,7 @@ from flask import Flask, request
 from werkzeug.contrib.cache import SimpleCache
 from functools import wraps
 
-
 cache = SimpleCache()
-
 
 # From http://flask.pocoo.org/docs/patterns/viewdecorators/
 def cached(timeout=5 * 60, key='view/%s'):
@@ -21,6 +19,6 @@ def cached(timeout=5 * 60, key='view/%s'):
         return decorated_function
     return decorator
 
-
 app = Flask(__name__)
 import deepviz_webui.views
+

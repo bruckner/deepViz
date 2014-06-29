@@ -196,6 +196,8 @@ function ConfusionMatrix(timeline) {
         return c;
     }
     this.refresh = function(time) {
+        // XXX confusion matrix broken!
+        return;
         $.ajax({
             url: "/checkpoints/" + time + "/confusionmatrix",
             dataType: "json"
@@ -268,6 +270,8 @@ function ImageClustering(timeline) {
     var table = $("<table>");
     this.dom = table;
     this.refresh = function(time) {
+        // XXX Clusters broken!
+        return;
         d3.json("/checkpoints/" + time + "/clusters", function(response) {
             var clusters = response['clusters'];
             var tab = d3.select(table[0]);
@@ -549,6 +553,7 @@ function DirectCompare() {
     this.dom = table;
     var outerThis = this;
     this.refresh = function(time) {
-        displaySubsetFilters(table, "1,40", "conv1,conv2,conv3", "1-10", "0-3", 5);
+        // XXX Hard coded numbers might be model specific!
+        displaySubsetFilters(table, "0,7", "conv1,conv2,conv3", "1-10", "0-3", 5);
     };
 }

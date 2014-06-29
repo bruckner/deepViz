@@ -4,51 +4,56 @@ Resources that are shared across all requests.
 from deepviz_webui.app import app
 from deepviz_webui.imagecorpus import CIFAR10ImageCorpus
 from deepviz_webui.model_stats_db import ModelStatsDB
-from deepviz_webui.utils.decaf import load_from_convnet
-from gpumodel import IGPUModel
-from shownet import ShowConvNet
+from models import *
 import os
 
 # TODO: These objects should be made thread-safe.
 
 _model_stats_db = None
 _models = None
-_model = None  # TODO: remove this once the graph is drawn from Decaf
 _image_corpus = None
 
+class BrokenByCaffeError(Exception):
+    pass
 
 def get_image_corpus():
+    # TODO Fix this for Imagenet
+    raise BrokenByCaffeError('get_image_corpus: Needs to be fixed for ImageNet')
     global _image_corpus
     if _image_corpus is None:
         _image_corpus = CIFAR10ImageCorpus(app.config["CIFAR_10_PATH"])
     return _image_corpus
 
-
 def get_models():
     global _models
     if _models is None:
-        model_path = app.config["TRAINED_MODEL_PATH"]
-        checkpoints = sorted(os.listdir(model_path))
-        _models = [load_from_convnet(os.path.join(model_path, c)) for c in checkpoints]
+        _models = load_models()
     return _models
 
+def load_models():
+    caffe_path = app.config["CAFFE_SPEC_PATH"]
+    if caffe_path == None:
+        return load_decaf_models()
+    else:
+        return load_caffe_models(caffe_path)
 
-# TODO: remove this once the graph is drawn from Decaf:
-def get_model():
-    global _model
-    if _model is None:
-        # This code is adapted from gpumodel.py and shownet.py
-        load_dic = IGPUModel.load_checkpoint(app.config["TRAINED_MODEL_PATH"])
-        op = ShowConvNet.get_options_parser()
-        old_op = load_dic["op"]
-        old_op.merge_from(op)
-        op = old_op
-        _model = ShowConvNet(op, load_dic)
-    return _model
+def load_decaf_models():
+    model_path = app.config["TRAINED_MODEL_PATH"]
+    checkpoints = sorted(os.listdir(model_path))
+    paths = [os.path.join(model_path, c) for c in checkpoints]
+    return [DecafModel.load(p) for p in paths]
 
+def load_caffe_models(spec_path):
+    model_path = app.config["TRAINED_MODEL_PATH"]
+    checkpoints = sorted(os.listdir(model_path))
+    paths = [os.path.join(model_path, c) for c in checkpoints]
+    return [CaffeModel.load(spec_path, p) for p in paths]
 
 def get_model_stats_db():
+    # TODO Fix this for Caffe
+    raise BrokenByCaffeError('MODEL_STATS_DB needs to be fixed for Caffe/Imagenet')
     global _model_stats_db
     if _model_stats_db is None:
         _model_stats_db = ModelStatsDB(app.config["MODEL_STATS_DB"])
     return _model_stats_db
+
